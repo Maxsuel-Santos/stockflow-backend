@@ -2,9 +2,10 @@
 
 ![Status do Projeto](https://img.shields.io/badge/status-active-brightgreen)
 ![Java Version](https://img.shields.io/badge/java-21-orange)
-![Spring Boot](https://img.shields.io/badge/spring--boot-4.0.1-brightgreen)
+![Spring Boot](https://img.shields.io/badge/spring--boot-3.4.1-brightgreen)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
 
-Esta é uma API RESTful robusta desenvolvida para auxiliar investidores na gestão de seus ativos. O sistema permite a criação de contas, associação de ações e o cálculo automático do patrimônio total baseado em dados em tempo real.
+Esta é uma API RESTful de alta performance projetada para gestão de ativos financeiros. O sistema oferece desde o controle básico de carteiras até o rastreamento detalhado de transações (Buy/Sell), com monitoramento em tempo real e integração com o mercado financeiro.
 
 ---
 
@@ -16,22 +17,28 @@ Abaixo está o diagrama que ilustra o relacionamento entre as entidades do siste
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## 🛠️ Tecnologias Utilizadas
 
-* **Java 21** & **Spring Boot 4.0.1**: Base do ecossistema.
-* **Spring Security & JWT**: Autenticação stateless e autorização baseada em Roles (ADMIN/USER).
-* **Spring Data JPA e Hibernate**: Abstração de persistência com suporte a diversos bancos de dados.
-* **OpenFeign**: Cliente HTTP declarativo para integração com a API **Brapi**.
-* **Lombok**: Redução de código boilerplate.
-* **Resilience4j**: Implementação de *Circuit Breaker* para garantir disponibilidade caso a API externa falhe.
-* **JUnit 5 & Mockito**: Testes de unidade e mocks de serviços.
-* **Slf4j**: Logs personalizados durante a execução.
-* **Postgres**: Banco de dados relacional robusto para armazenamento de usuários e ativos.
-* **Docker e Docker Compose**: Containerização completa da aplicação e do banco de dados para deploy simplificado.
-* **SpringDoc OpenAPI (Swagger)**: Documentação interativa da API com schemas detalhados de sucesso e erro.
-* **Spring Boot Actuator**: Exposição de endpoints operacionais para monitorar a saúde da aplicação (/health), métricas e informações do sistema.
-* **Micrometer & Prometheus**: Coleta e exportação de métricas customizadas e de infraestrutura no formato compatível com o Prometheus, permitindo monitorar o consumo de CPU, memória e tempo de resposta das requisições.
-* **Global Exception Handling**: Tratamento padronizado de erros com ErrorResponseDto.
+### Core Backend
+* **Java 21** & **Spring Boot 3.4**: Base moderna com foco em performance.
+* **Spring Security & JWT**: Autenticação stateless com renovação de tokens e proteção de rotas.
+* **Spring Data JPA**: Persistência robusta com PostgreSQL.
+* **Spring Cloud OpenFeign**: Integração declarativa com a API **Brapi** para cotações em tempo real.
+* **MapStruct**: Mapeamento de objetos (DTO <-> Entity) performático e sem boilerplate.
+* **Resilience4j**: Circuit Breaker e Retry para garantir estabilidade nas chamadas externas.
+
+### Observabilidade & Monitoramento (Grafana Stack) 📊
+O projeto implementa o conceito de "Full Observability":
+* **Micrometer Tracing & OTLP**: Instrumentação para rastreamento distribuído.
+* **Prometheus**: Coleta de métricas detalhadas da JVM e do tráfego HTTP.
+* **Grafana Tempo**: Armazenamento de *Traces* para analisar o ciclo de vida de cada requisição.
+* **Grafana Dashboards**: Visualização centralizada de métricas e saúde do sistema.
+
+### Infraestrutura
+* **Docker & Docker Compose**: Orquestração completa (App, DB, Prometheus, Grafana, Tempo).
+* **Global Exception Handling**: Tratamento de erros padronizado com suporte a fusos horários (Brasília).
+* **SpringDoc OpenAPI**: Documentação interativa via Swagger UI.
+
 ---
 
 ## 🔒 Funcionalidades de Segurança (Destaques)
@@ -47,34 +54,42 @@ Tratamento centralizado de erros que fornece respostas claras e seguras via DTOs
 
 A documentação completa e interativa (Swagger UI) pode ser acessada em: `http://localhost:8080/swagger-ui.html`.
 
-### 🔐 Autenticação (Acesso Público)
+### 🔐 Autenticação & Perfil (Acesso Público e Privado)
 | Método | Endpoint         | Descrição                                |
 |:-------|:-----------------|:-----------------------------------------|
-| `POST` | `/auth/register` | Registra um novo usuário no sistema.     |
-| `POST` | `/auth/login`    | Autentica e retorna um Bearer Token JWT. |
-| `GET`  | `/auth/me`       | Retorna os dados do usuário autenticado. |
+| `POST` | `/auth/register` | Registra um novo usuário.                |
+| `POST` | `/auth/login`    | Autentica e retorna o Bearer Token JWT.  |
+| `GET`  | `/auth/me`       | Retorna dados do usuário logado (JWT).   |
+| `POST` | `/auth/logout`   | Invalida o token atual.                  |
 
-### 👤 Usuários (Requer Autenticação)
+### 👤 Gestão de Usuários (Requer ADMIN)
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/users/{userId}` | Retorna os detalhes de um usuário específico por ID. |
-| `GET` | `/users/all` | Lista todos os usuários cadastrados (Acesso: ADMIN). |
-| `PUT` | `/users/{userId}` | Atualiza as informações do perfil do usuário. |
-| `DELETE` | `/users/{userId}` | Remove permanentemente a conta do usuário do sistema. |
+| `GET` | `/users/all` | Lista todos os usuários do sistema. |
+| `GET` | `/users/{userId}` | Detalhes de um perfil específico. |
+| `PUT` | `/users/{userId}` | Atualiza dados (nome, e-mail). |
+| `DELETE` | `/users/{userId}` | Remove permanentemente o usuário. |
 
-### 💳 Contas & Carteiras (Requer Autenticação)
+### 📈 Mercado & Ativos (Catálogo)
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/users/{userId}/accounts` | Cria uma nova carteira de investimentos para o usuário. |
-| `GET` | `/users/{userId}/accounts` | Lista todas as contas/carteiras vinculadas ao usuário. |
-| `GET` | `/accounts/{accountId}/balance` | **Cálculo de Patrimônio:** Soma o valor em tempo real de todos os ativos da conta via API externa. |
+| `POST` | `/stocks` | Cadastra uma nova ação/ticker no sistema. |
+| `GET` | `/stocks` | Lista resumo de ativos do usuário logado. |
 
-### 📈 Ativos & Investimentos (Requer Autenticação)
+### 💸 Operações Financeiras (Trades)
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/stocks` | Cadastra um novo ativo (Ação/FII) no catálogo do sistema. |
-| `POST` | `/accounts/{accountId}/stocks` | Associa/Compra um ativo para uma conta específica (vínculo Account-Stock). |
-| `GET` | `/accounts/{accountId}/stocks` | Lista todos os ativos e quantidades presentes em uma carteira específica. |
+| `POST` | `/trades/buy` | **Executa Compra:** Valida saldo e preço real (Brapi). |
+| `POST` | `/trades/sell` | **Executa Venda:** Valida posse e credita valor. |
+| `GET` | `/trades/history` | Histórico cronológico de operações (Brasília Time). |
+| `GET` | `/trades/portfolio/{accountId}` | Portfólio completo: Patrimônio + Valor de Mercado. |
+
+### 💳 Contas & Carteiras
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/users/{userId}/accounts` | Cria uma nova carteira para o usuário. |
+| `GET` | `/users/{userId}/accounts` | Lista carteiras e saldos consolidados. |
+| `GET` | `/accounts/{accountId}/balance` | Cálculo de patrimônio simplificado (Total Equity). |
 ---
 
 ## ⚙️ Configuração e Execução
@@ -95,6 +110,8 @@ O projeto utiliza variáveis de ambiente para proteger dados sensíveis. Se esti
 A aplicação está preparada para rodar em containers, gerenciando a API, o banco de dados PostgreSQL e o monitoramento automaticamente.
 
 ```bash
+# Limpa caches antigos e sobe todo o ecossistema:
+docker compose down -v
 # Na raiz do projeto, execute o comando abaixo para subir o ecossistema:
 docker-compose up --build
 ```
@@ -129,6 +146,30 @@ spring.datasource.password=sua_senha
 management.endpoints.web.exposure.include=health,info,prometheus
 management.endpoint.health.show-details=always
 ```
+### 6. Painéis disponíveis após o boot
+1. API: http://localhost:8080
+2. Swagger UI: http://localhost:8080/swagger-ui.html
+3. Grafana: http://localhost:3000 (Login: admin / admin)
+4. Prometheus: http://localhost:9090
+
+## 📊 Observabilidade e Monitoramento
+
+O projeto conta com uma stack completa de monitoramento para garantir a saúde da aplicação e facilitar o debug em tempo real.
+
+### 📈 Grafana Dashboards
+Ao acessar o Grafana (`localhost:3000`), você pode importar dashboards para visualizar:
+* **Métricas da JVM**: Uso de memória Heap, Threads e Coleta de Lixo (GC).
+* **Tráfego HTTP**: Taxa de sucesso (2xx), erros (4xx/5xx) e latência dos endpoints.
+* **Conexões com Banco**: Performance do pool de conexões (HikariCP).
+> **Dica**: Utilize o ID `19022` no menu "Import" do Grafana para um dashboard Spring Boot completo.
+
+### 🔍 Rastreamento Distribuído (Distributed Tracing)
+Com o **Grafana Tempo**, é possível rastrear o caminho exato de uma requisição.
+* **Onde foi o gargalo?** Você consegue ver exatamente quantos milissegundos a aplicação gastou processando a lógica interna vs. quanto tempo levou a resposta da API externa (Brapi).
+* **Debug de Erros**: Se uma transação de compra falhar, o rastro mostrará em qual camada a exceção foi lançada.
+
+### 🛠️ Prometheus Metrics
+As métricas brutas são expostas via Spring Actuator em `/actuator/prometheus`, onde o Prometheus faz o "scrape" periódico dos dados.
 
 ## 🧪 Testes e Qualidade
 
@@ -144,7 +185,7 @@ O projeto utiliza as principais bibliotecas do ecossistema Java para garantir qu
 Os testes estão localizados em `src/test/java/` e seguem a hierarquia dos pacotes da aplicação:
 
 1. **Unit Tests (Services)**: Validação de regras de negócio, como o cálculo de patrimônio e validação de senhas no `AuthService`.
-2. **Integration Tests (Controllers)**: Garantem que os endpoints estão respondendo corretamente (status 200, 201, 401, 403) e que o `GlobalExceptionHandler` está capturando os erros.
+2. **Integration Tests (Controllers)**: Garantem que os endpoints estão respondendo corretamente (status 200, 201, 401, 403, 404) e que o `GlobalExceptionHandler` está capturando os erros.
 
 ### 🚀 Como Executar os Testes
 
@@ -166,3 +207,7 @@ O projeto utiliza **GitHub Actions** para garantir a qualidade do código em cad
 * **Segurança**: Garante que novas alterações não quebrem o fluxo de autenticação JWT ou o tratamento global de exceções.
 * **Status**: O selo de "Build" no topo do repositório indica se a versão atual está estável.
 
+## 📄 Licença
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
