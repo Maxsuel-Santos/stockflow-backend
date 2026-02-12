@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,16 +42,19 @@ public class TradeController {
     private final AccountService accountService;
 
     @Operation(
-            summary = "Execute a buy order",
-            description = "Validates user cash, fetches real-time price, updates average price, and logs the transaction.",
-            operationId = "buyStock"
+        summary = "Execute a buy order",
+        description = "Validates user cash balance, fetches real-time asset price via Brapi, updates average cost, and persists the transaction log.",
+        operationId = "buyStock",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Purchase executed successfully"),
-            @ApiResponse(responseCode = "400", description = "Insufficient funds or invalid parameters",
-                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-            @ApiResponse(responseCode = "404", description = "User, Account or Stock not found",
-                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+        @ApiResponse(responseCode = "200", description = "Purchase executed successfully"),
+        @ApiResponse(responseCode = "400", description = "Insufficient funds, invalid quantity, or inactive asset",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Valid JWT required",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @ApiResponse(responseCode = "404", description = "User, Account or Stock ticker not found",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @PostMapping("/buy")
     public ResponseEntity<Void> buy(@RequestBody @Valid TradeRequestDto dto,
@@ -65,13 +69,16 @@ public class TradeController {
     }
 
     @Operation(
-            summary = "Execute a sell order",
-            description = "Verifies shares availability, credits cash to user, and logs the transaction.",
-            operationId = "sellStock"
+        summary = "Execute a sell order",
+        description = "Verifies share availability in the specific account, credits the total value to user cash, and logs the sale.",
+        operationId = "sellStock",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Sale successful"),
             @ApiResponse(responseCode = "400", description = "Insufficient shares for the requested operation",
+                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
                          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "Account or Asset not found",
                          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
@@ -89,15 +96,16 @@ public class TradeController {
     }
 
     @Operation(
-            summary = "Get transaction history",
-            description = "Returns a list of all buy and sell operations performed by the authenticated user.",
-            operationId = "getTransactionHistory"
+        summary = "Get transaction history",
+        description = "Returns a chronological list of all buy and sell operations performed by the authenticated user. Dates are formatted for Brasilia timezone.",
+        operationId = "getTransactionHistory",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of transactions retrieved",
-                         content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionsResponseDto.class)))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized access",
-                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+        @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully",
+                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionsResponseDto.class)))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized access",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @GetMapping("/history")
     public ResponseEntity<List<TransactionsResponseDto>> getHistory(@Parameter(hidden = true) @AuthenticationPrincipal User user) {
@@ -114,26 +122,27 @@ public class TradeController {
     }
 
     @Operation(
-            summary = "Get consolidated portfolio",
-            description = "Calculates total equity by summing available user cash and real-time stock market values for a specific account.",
-            operationId = "getAccountPortfolio"
+        summary = "Get consolidated portfolio for account",
+        description = "Calculates total equity (Cash + Market Value of Assets) for a specific account using real-time market data.",
+        operationId = "getAccountPortfolio",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Portfolio calculated successfully",
-                    content = @Content(schema = @Schema(implementation = PortfolioResponseDto.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "User is not authenticated",
-                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Account not found or does not belong to the user",
-                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
-            )
+        @ApiResponse(
+            responseCode = "200",
+            description = "Portfolio calculated successfully",
+            content = @Content(schema = @Schema(implementation = PortfolioResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found or access denied for this user",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        )
     })
     @GetMapping("/portfolio/{accountId}")
     public ResponseEntity<PortfolioResponseDto> getPortfolio(@PathVariable String accountId,

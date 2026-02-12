@@ -30,10 +30,11 @@ public class CorsConfig {
 
         config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source =
-            new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
+
 }

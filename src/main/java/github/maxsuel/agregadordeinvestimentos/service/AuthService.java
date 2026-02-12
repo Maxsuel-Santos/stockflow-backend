@@ -36,7 +36,7 @@ public class AuthService {
         }
 
         if (userRepository.existsByEmail(createUserDto.email())) {
-            throw new DuplicatedDataException("Email already registered");
+            throw new DuplicatedDataException("Email already registered.");
         }
 
         String encodedPassword = passwordEncoder.encode(createUserDto.password());
@@ -79,7 +79,7 @@ public class AuthService {
             String token = authHeader.replace("Bearer ", "");
             blacklistService.blacklistToken(token);
 
-            log.info("Token added to blacklist");
+            log.info("Token added to blacklist.");
         }
     }
 

@@ -23,8 +23,10 @@ public interface AccountStockMapper {
 
     default double calculateTotal(double quantity, double price) {
         double totalRaw = quantity * price;
+
         return BigDecimal.valueOf(totalRaw)
                 .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
     }
+
 }

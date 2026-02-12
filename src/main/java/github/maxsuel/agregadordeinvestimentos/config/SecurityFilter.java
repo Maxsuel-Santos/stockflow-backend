@@ -37,6 +37,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (blacklistService.getBlacklistedToken(token) != null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Token has been invalidated (Logged out).");
+
                 return;
             }
 
@@ -64,8 +65,12 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private @Nullable String recoverToken(@NonNull HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
+
+        if (authHeader == null) {
+            return null;
+        }
 
         return authHeader.replace("Bearer ", "");
     }
+
 }

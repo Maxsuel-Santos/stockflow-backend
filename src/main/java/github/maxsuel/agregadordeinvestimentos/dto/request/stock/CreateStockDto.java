@@ -5,11 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-@Schema(description = "Request payload to create a new stock")
+@Schema(description = "Request payload to create a new stock.")
 public record CreateStockDto(
 
     @Schema(
-        description = "Stock trading code (ticker)",
+        description = "Stock trading code (ticker).",
         example = "PETR4"
     )
     @NotBlank(message = "The Stock Trading Code is mandatory.")
@@ -18,11 +18,12 @@ public record CreateStockDto(
     String stockId,
 
     @Schema(
-        description = "Company legal or trade name",
+        description = "Company legal or trade name.",
         example = "Petróleo Brasileiro S.A."
     )
     @NotBlank(message = "Description cannot be empty.")
     @NotNull(message = "Description cannot be null.")
     String description
+
 ) {
 }

@@ -4,11 +4,11 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Response returned by the Brapi external API containing stock data")
+@Schema(description = "Response returned by the Brapi external API containing stock data.")
 public record BrapiResponseDto(
 
     @Schema(
-        description = "List of stock results returned by the external API",
+        description = "List of stock results returned by the external API.",
         example = """
         [
           {
@@ -20,5 +20,6 @@ public record BrapiResponseDto(
         """
     )
     List<StockDto> results
+
 ) {
 }

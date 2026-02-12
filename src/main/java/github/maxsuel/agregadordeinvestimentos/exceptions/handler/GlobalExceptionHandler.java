@@ -1,5 +1,6 @@
-package github.maxsuel.agregadordeinvestimentos.exceptions;
+package github.maxsuel.agregadordeinvestimentos.exceptions.handler;
 
+import github.maxsuel.agregadordeinvestimentos.exceptions.*;
 import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -42,7 +43,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
-    @ExceptionHandler({BadCredentialsException.class, UserNotFoundException.class})
+    @ExceptionHandler({BadCredentialsException.class})
     public ResponseEntity<ErrorResponseDto> handleAuthErrors(@NonNull Exception ex) {
         log.warn("Authentication failure: {}", ex.getMessage());
 
@@ -114,7 +115,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    @ExceptionHandler({AccountNotFoundException.class, StockNotFoundException.class})
+    @ExceptionHandler({AccountNotFoundException.class, StockNotFoundException.class, UserNotFoundException.class})
     public ResponseEntity<ErrorResponseDto> handleNotFound(@NonNull Exception ex) {
         var errorResponse = new ErrorResponseDto(
                 HttpStatus.NOT_FOUND.value(),

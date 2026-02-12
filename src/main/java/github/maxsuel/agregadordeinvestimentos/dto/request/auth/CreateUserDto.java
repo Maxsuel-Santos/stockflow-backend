@@ -6,11 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-@Schema(description = "Request payload to create a new user")
+@Schema(description = "Request payload to create a new user.")
 public record CreateUserDto(
 
     @Schema(
-        description = "Unique username used to identify the user in the system",
+        description = "Unique username used to identify the user in the system.",
         example = "john_doe"
     )
     @NotBlank(message = "Username is required.")
@@ -18,7 +18,7 @@ public record CreateUserDto(
     String username,
 
     @Schema(
-        description = "User email address",
+        description = "User email address.",
         example = "johndoe@email.com"
     )
     @NotBlank(message = "Email is required.")
@@ -27,12 +27,13 @@ public record CreateUserDto(
     String email,
 
     @Schema(
-        description = "User password with a minimum of 8 characters",
+        description = "User password with a minimum of 8 characters.",
         example = "password#123"
     )
     @NotBlank(message = "Password is mandatory.")
     @NotNull(message = "Password cannot be null.")
     @Size(min = 8, message = "The password must be at least 8 characters long.")
     String password
+
 ) {
 }

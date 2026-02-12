@@ -16,4 +16,5 @@ public class BlacklistService {
     public String getBlacklistedToken(String token) {
         return null;
     }
+
 }
