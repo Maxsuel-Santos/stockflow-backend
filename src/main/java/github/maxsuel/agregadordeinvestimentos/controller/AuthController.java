@@ -2,6 +2,7 @@ package github.maxsuel.agregadordeinvestimentos.controller;
 
 import java.net.URI;
 
+import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.NonNull;
@@ -56,9 +57,9 @@ public class AuthController {
             )   
         ),
         @ApiResponse(
-            responseCode = "400", 
-            description = "Invalid input data",
-            content = @Content
+            responseCode = "400",
+            description = "Invalid input data or email already exists",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
         )
     })
     @PostMapping("/register")
@@ -81,34 +82,34 @@ public class AuthController {
             )   
         ),
         @ApiResponse(
-            responseCode = "401", 
-            description = "Invalid username or password",
-            content = @Content
+            responseCode = "401",
+            description = "Invalid email or password",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
         )
     })
-    @PostMapping(path = "/login")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
         var loginResponse = authService.login(loginDto);
         return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
     }
 
     @Operation(
-        summary = "Get authenticated user",
-        description = "Returns the currently authenticated user based on the JWT token",
+        summary = "Get current authenticated user",
+        description = "Extracts user data from the JWT token provided in the Authorization header.",
         security = @SecurityRequirement(name = "bearerAuth")
     )
-    @ApiResponse(
-        responseCode = "200",
-        description = "Authenticated user successfully retrieved",
-        content = @Content(
-            mediaType = "application/json",
-            schema = @Schema(implementation = UserDto.class)
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "User data retrieved successfully",
+            content = @Content(schema = @Schema(implementation = UserDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized - JWT token is missing, expired or invalid",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
         )
-    )
-    @ApiResponse(
-        responseCode = "401",
-        description = "Unauthorized - invalid or missing JWT token"
-    )
+    })
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(@Parameter(hidden = true) @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -121,13 +122,17 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Logout user",
-            description = "Invalidates the current JWT token by adding it to a server-side blacklist.",
-            security = @SecurityRequirement(name = "bearerAuth")
+        summary = "Logout user",
+        description = "Invalidates the current Bearer token. Requires an active session.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Logged out successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(responseCode = "204", description = "Logged out successfully"),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        )
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@NonNull HttpServletRequest request) {
@@ -136,4 +141,5 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
+
 }

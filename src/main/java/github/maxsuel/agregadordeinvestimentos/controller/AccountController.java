@@ -2,6 +2,8 @@ package github.maxsuel.agregadordeinvestimentos.controller;
 
 
 import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountBalanceDto;
+import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,22 +34,27 @@ public class AccountController {
     private final AccountService accountService;
 
     @Operation(
-        summary = "Associates an stock with an account.", 
-        description = "Links a financial asset and the quantity purchased to a specific account."
+        summary = "Associate a stock with an account",
+        description = "Links a financial asset (ticker) and the quantity purchased to a specific account. If the asset is already associated, it updates the position."
     )
     @ApiResponses({
         @ApiResponse(
-            responseCode = "200", 
-            description = "Stock associated with success.",
+            responseCode = "200",
+            description = "Stock associated successfully.",
             content = @Content
         ),
         @ApiResponse(
-            responseCode = "404", 
-            description = "Account or Stock not found.",
-            content = @Content
+            responseCode = "400",
+            description = "Invalid request data (e.g., negative quantity or invalid ticker format).",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account or Stock not found in the system.",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
         )
     })
-    @PostMapping(path = "/{accountId}/stocks")
+    @PostMapping("/{accountId}/stocks")
     public ResponseEntity<Void> associateStock(@PathVariable("accountId") String accountId,
                                                @Valid @RequestBody AssociateAccountStockDto dto) {
         accountService.associateStock(accountId, dto);
@@ -55,7 +62,27 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "Get account total balance", description = "Calculates the sum of all stocks in the account based on real-time Brapi prices.")
+    @Operation(
+        summary = "Get account total balance",
+        description = "Calculates the total equity by summing all stocks owned by the account, using real-time prices from the Brapi API."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Balance calculated successfully.",
+            content = @Content(schema = @Schema(implementation = AccountBalanceDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found.",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "502",
+            description = "Bad Gateway - Error communicating with Brapi API.",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        )
+    })
     @GetMapping("/{accountId}/balance")
     public ResponseEntity<AccountBalanceDto> getBalance(@PathVariable String accountId) {
         return ResponseEntity.ok(accountService.getAccountBalance(accountId));

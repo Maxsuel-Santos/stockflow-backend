@@ -16,7 +16,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.RequiredArgsConstructor;
 
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -51,4 +50,5 @@ public class SecurityConfig {
                 .addFilterBefore(securityFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 }

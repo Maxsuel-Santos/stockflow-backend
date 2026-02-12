@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(
-        name = "BrapiClient",
-        url = "https://brapi.dev"
+    name = "BrapiClient",
+    url = "https://brapi.dev"
 )
 public interface BrapiClient {
 

@@ -105,6 +105,7 @@ public class AccountService {
                             .filter(r -> r != null && as.getStock().getStockId().equals(r.stock()))
                             .findFirst()
                             .orElseThrow();
+
                     return as.getQuantity() * stockData.regularMarketPrice();
                 })
                 .sum();

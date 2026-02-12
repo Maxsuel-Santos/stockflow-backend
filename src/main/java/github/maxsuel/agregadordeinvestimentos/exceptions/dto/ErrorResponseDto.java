@@ -8,22 +8,30 @@ import java.util.Map;
 
 @Schema(description = "Standardized object for returning API error details.")
 public record ErrorResponseDto(
-        @NotNull
-        @Schema(example = "400", description = "HTTP Status Code")
-        int status,
 
-        @NotNull
-        @Schema(example = "Validation failed for one or more fields", description = "General error message")
-        String message,
+    @NotNull
+    @Schema(
+        example = "400",
+        description = "HTTP Status Code."
+    )
+    int status,
 
-        @NotNull
-        @Schema(description = "Timestamp when the error occurred")
-        Instant timestamp,
+    @NotNull
+    @Schema(
+        example = "Validation failed for one or more fields.",
+        description = "General error message"
+    )
+    String message,
 
-        @Schema(
-                example = "{\"username\": \"Username cannot be empty\", \"email\": \"Invalid email format\"}",
-                description = "Map containing specific field names and their respective validation error messages. Can be null if not a validation error."
-        )
-        Map<String, String> fieldsErrors
+    @NotNull
+    @Schema(description = "Timestamp when the error occurred")
+    Instant timestamp,
+
+    @Schema(
+        example = "{\"username\": \"Username cannot be empty\", \"email\": \"Invalid email format\"}",
+        description = "Map containing specific field names and their respective validation error messages. Can be null if not a validation error."
+    )
+    Map<String, String> fieldsErrors
+
 ) {
 }

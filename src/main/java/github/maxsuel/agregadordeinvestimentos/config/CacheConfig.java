@@ -17,9 +17,10 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("invalidTokens", "stockPrices");
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(24, TimeUnit.HOURS)
-                .maximumSize(10000));
+                    .expireAfterWrite(24, TimeUnit.HOURS)
+                    .maximumSize(10000));
 
         return cacheManager;
     }
+
 }

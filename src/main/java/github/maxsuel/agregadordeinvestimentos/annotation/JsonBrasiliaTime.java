@@ -12,9 +12,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @JacksonAnnotationsInside
 @JsonFormat(
-        shape = JsonFormat.Shape.STRING,
-        pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS",
-        timezone = "America/Sao_Paulo"
+    shape = JsonFormat.Shape.STRING,
+    pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS",
+    timezone = "America/Sao_Paulo"
 )
 public @interface JsonBrasiliaTime {
 }

@@ -43,4 +43,5 @@ public class Account {
         this.description = description;
         this.accountStocks = accountStocks;
     }
+
 }

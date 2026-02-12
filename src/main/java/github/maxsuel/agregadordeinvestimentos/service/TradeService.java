@@ -46,9 +46,9 @@ public class TradeService {
         }
 
         var account = accountRepository.findById(dto.accountId())
-                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found."));
         var stock = stockRepository.findById(dto.stockId())
-                .orElseThrow(() -> new StockNotFoundException("Stock ticker not recognized"));
+                .orElseThrow(() -> new StockNotFoundException("Stock ticker not recognized."));
 
         var id = new AccountStockId(dto.accountId(), dto.stockId());
         AccountStock accountStock = accountStockRepository.findById(id)

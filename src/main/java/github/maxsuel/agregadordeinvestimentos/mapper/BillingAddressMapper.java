@@ -14,4 +14,5 @@ public interface BillingAddressMapper {
     @Mapping(target = "street", source = "dto.street")
     @Mapping(target = "number", source = "dto.number")
     BillingAddress toEntity(CreateAccountDto dto, Account account);
+
 }
