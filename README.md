@@ -2,7 +2,7 @@
 
 ![Status do Projeto](https://img.shields.io/badge/status-active-brightgreen)
 ![Java Version](https://img.shields.io/badge/java-21-orange)
-![Spring Boot](https://img.shields.io/badge/spring--boot-3.4.1-brightgreen)
+![Spring Boot](https://img.shields.io/badge/spring--boot-4.0.1-brightgreen)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
 
 Esta é uma API RESTful de alta performance projetada para gestão de ativos financeiros. O sistema oferece desde o controle básico de carteiras até o rastreamento detalhado de transações (Buy/Sell), com monitoramento em tempo real e integração com o mercado financeiro.
