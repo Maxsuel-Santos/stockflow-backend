@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface TransactionsRepository extends JpaRepository<Transactions, Long> {
+public interface TransactionsRepository extends JpaRepository<Transactions, UUID> {
 
     List<Transactions> findAllByUser_UserId(UUID userId);
 
