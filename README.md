@@ -20,7 +20,7 @@ Abaixo está o diagrama que ilustra o relacionamento entre as entidades do siste
 ## 🛠️ Tecnologias Utilizadas
 
 ### Core Backend
-* **Java 21** & **Spring Boot 3.4**: Base moderna com foco em performance.
+* **Java 21** & **Spring Boot 4.0.1**: Base moderna com foco em performance.
 * **Spring Security & JWT**: Autenticação stateless com renovação de tokens e proteção de rotas.
 * **Spring Data JPA**: Persistência robusta com PostgreSQL.
 * **Spring Cloud OpenFeign**: Integração declarativa com a API **Brapi** para cotações em tempo real.
