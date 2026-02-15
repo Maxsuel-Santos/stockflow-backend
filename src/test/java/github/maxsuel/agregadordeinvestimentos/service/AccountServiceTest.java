@@ -3,12 +3,16 @@ package github.maxsuel.agregadordeinvestimentos.service;
 import github.maxsuel.agregadordeinvestimentos.client.BrapiClient;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.BrapiResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.StockDto;
+import github.maxsuel.agregadordeinvestimentos.dto.request.account.AssociateAccountStockDto;
+import github.maxsuel.agregadordeinvestimentos.entity.*;
+import github.maxsuel.agregadordeinvestimentos.exceptions.AccountNotFoundException;
 import github.maxsuel.agregadordeinvestimentos.mapper.AccountStockMapper;
 import github.maxsuel.agregadordeinvestimentos.repository.AccountRepository;
 import github.maxsuel.agregadordeinvestimentos.repository.AccountStockRepository;
 import github.maxsuel.agregadordeinvestimentos.repository.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -16,14 +20,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +36,7 @@ class AccountServiceTest {
     private AccountRepository accountRepository;
 
     @Mock
-    private StockRepository stockRepository;
+    StockRepository stockRepository;
 
     @Mock
     private AccountStockRepository accountStockRepository;
@@ -55,60 +58,116 @@ class AccountServiceTest {
                 brapiClient,
                 accountStockMapper
         );
-
         ReflectionTestUtils.setField(accountService, "TOKEN", "test-token");
     }
 
-    @Test
-    @DisplayName("Should calculate account balance correctly using StockDto")
-    void getAccountBalance_Success() {
-        var accountId = UUID.randomUUID();
-        var stockId = "PETR4";
-        var quantity = 10;
-        var marketPrice = 30.0;
+    @Nested
+    @DisplayName("Stock Association & Balance.")
+    class AssociateAndBalanceTests {
 
-        var user = new github.maxsuel.agregadordeinvestimentos.entity.User();
-        user.setUsername("Alice");
+        @Test
+        @DisplayName("Should associate a stock to an account.")
+        void associateStock_Success() {
+            var accountId = UUID.randomUUID();
+            var dto = new AssociateAccountStockDto("ITUB4", 100);
+            var account = new Account();
+            account.setAccountId(accountId);
+            var stock = new Stock();
+            stock.setStockId("ITUB4");
 
-        var account = new github.maxsuel.agregadordeinvestimentos.entity.Account(
-                user,
-                "Investment Portfolio",
-                new java.util.ArrayList<>()
-        );
-        account.setAccountId(accountId);
+            when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+            when(stockRepository.findById("ITUB4")).thenReturn(Optional.of(stock));
 
-        var stock = new github.maxsuel.agregadordeinvestimentos.entity.Stock();
-        stock.setStockId(stockId);
+            assertDoesNotThrow(() -> accountService.associateStock(accountId.toString(), dto));
+            verify(accountStockRepository).save(any(AccountStock.class));
+        }
 
-        var accountStockId = new github.maxsuel.agregadordeinvestimentos.entity.AccountStockId(accountId, stockId);
-        var accountStock = new github.maxsuel.agregadordeinvestimentos.entity.AccountStock(
-                accountStockId,
-                account,
-                stock,
-                quantity,
-                BigDecimal.ZERO
-        );
+        @Test
+        @DisplayName("Should calculate account balance correctly.")
+        void getAccountBalance_Success() {
+            var accountId = UUID.randomUUID();
+            var account = new Account(new User(), "Wallet", new ArrayList<>());
+            account.setAccountId(accountId);
+            var stock = new Stock();
+            stock.setStockId("PETR4");
+            account.getAccountStocks().add(new AccountStock(new AccountStockId(accountId, "PETR4"), account, stock, 10, BigDecimal.ZERO));
 
-        account.getAccountStocks().add(accountStock);
+            var brapiResponse = new BrapiResponseDto(List.of(new StockDto("PETR4", "", "", 30.0, "BRL", "")));
 
-        var stockDto = new StockDto(
-                "PETR4",
-                "Petrobras PN",
-                "Petroleo Brasileiro SA Pfd",
-                marketPrice,
-                "BRL",
-                "https://icons.brapi.dev/icons/PETR4.svg"
-        );
+            when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(accountStockMapper.calculateTotal(anyDouble(), anyDouble())).thenReturn(300.0);
 
-        var brapiResponse = new BrapiResponseDto(List.of(stockDto));
+            var result = accountService.getAccountBalance(accountId.toString());
 
-        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
-        when(brapiClient.getQuote(any(), eq(stockId))).thenReturn(brapiResponse);
-        when(accountStockMapper.calculateTotal(anyDouble(), anyDouble())).thenReturn(300.0);
+            assertNotNull(result);
+            assertEquals(300.0, result.totalBalance());
+        }
 
-        var result = accountService.getAccountBalance(accountId.toString());
-
-        assertNotNull(result);
-        assertEquals(300.0, result.totalBalance());
     }
+
+    @Nested
+    @DisplayName("Portfolio and Security.")
+    class PortfolioTests {
+
+        @Test
+        @DisplayName("Should return complete portfolio summing cash and stocks.")
+        void getCompletePortfolio_Success() {
+            var userId = UUID.randomUUID();
+            var accountId = UUID.randomUUID();
+            var user = new User();
+            user.setUserId(userId);
+            user.setCash(new BigDecimal("500.00"));
+
+            var account = new Account();
+            account.setAccountId(accountId);
+            account.setUser(user);
+            account.setAccountStocks(new ArrayList<>());
+            var stock = new Stock();
+            stock.setStockId("AAPL");
+            account.getAccountStocks().add(new AccountStock(null, account, stock, 2, BigDecimal.ZERO));
+
+            var brapiResponse = new BrapiResponseDto(List.of(new StockDto("AAPL", "", "", 150.0, "USD", "")));
+
+            when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+
+            var portfolio = accountService.getCompletePortfolio(user, accountId.toString());
+
+            assertEquals(new BigDecimal("800.00"), portfolio.totalEquity());
+            assertEquals(new BigDecimal("300.00"), portfolio.investedInStocks());
+        }
+
+        @Test
+        @DisplayName("Should throw exception for unauthorized account access.")
+        void getCompletePortfolio_Forbidden() {
+            var user = new User(); user.setUserId(UUID.randomUUID());
+            var otherUser = new User(); otherUser.setUserId(UUID.randomUUID());
+            var account = new Account(); account.setUser(otherUser);
+            var accountId = UUID.randomUUID();
+
+            when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+
+            assertThrows(AccountNotFoundException.class, () -> accountService.getCompletePortfolio(user, accountId.toString()));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Resilience.")
+    class ResilienceTests {
+
+        @Test
+        @DisplayName("Should return fallback response with N/A and Service Unavailable.")
+        void fallbackListStocks_Success() {
+            var result = accountService.fallbackListStocks("any-id", new RuntimeException());
+
+            assertFalse(result.isEmpty());
+            // CORREÇÃO AQUI: stockId deve ser "N/A" e name deve ser "Service unavailable"
+            assertEquals("N/A", result.getFirst().stockId());
+            assertEquals("Service unavailable", result.getFirst().name());
+        }
+
+    }
+
 }
