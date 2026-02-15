@@ -1,8 +1,14 @@
 package github.maxsuel.agregadordeinvestimentos.service;
 
+import github.maxsuel.agregadordeinvestimentos.dto.request.account.CreateAccountDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.user.UpdateUserDto;
+import github.maxsuel.agregadordeinvestimentos.entity.Account;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
 import github.maxsuel.agregadordeinvestimentos.exceptions.UserNotFoundException;
+import github.maxsuel.agregadordeinvestimentos.mapper.AccountMapper;
+import github.maxsuel.agregadordeinvestimentos.mapper.BillingAddressMapper;
+import github.maxsuel.agregadordeinvestimentos.repository.AccountRepository;
+import github.maxsuel.agregadordeinvestimentos.repository.BillingAddressRepository;
 import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +42,22 @@ public class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private AccountRepository accountRepository;
+
+    @Mock
+    private AccountService accountService;
+
+    @Mock
+    private BillingAddressRepository billingAddressRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AccountMapper accountMapper;
+
+    @Mock
+    private BillingAddressMapper billingAddressMapper;
 
     @InjectMocks
     private UserService userService;
@@ -47,11 +69,11 @@ public class UserServiceTest {
     private ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Nested
-    @DisplayName("Tests for Updating User")
+    @DisplayName("Tests for Updating User.")
     public class UpdateUser {
 
         @Test
-        @DisplayName("Should update user when it exists")
+        @DisplayName("Should update user when it exists.")
         public void shouldUpdateUserWhenUserExists() {
             // Arrange
             var userId = UUID.randomUUID();
@@ -81,7 +103,7 @@ public class UserServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when user does not exist in update")
+        @DisplayName("Should throw exception when user does not exist in update.")
         public void shouldThrowExceptionWhenUserDoesNotExist() {
             // Arrange
             var userId = UUID.randomUUID().toString();
@@ -96,11 +118,11 @@ public class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("Tests for Getting User by ID")
+    @DisplayName("Tests for Getting User by ID.")
     public class getUserById {
 
         @Test
-        @DisplayName("Should get user by id with success when optional is present")
+        @DisplayName("Should get user by id with success when optional is present.")
         // Arrange
         public void shouldGetUserByIdWithSuccessWhenOptionalIsPresent() {
             var user = new User(
@@ -125,7 +147,7 @@ public class UserServiceTest {
         }
 
         @Test
-        @DisplayName("Should get user by id with success when optional is empty")
+        @DisplayName("Should get user by id with success when optional is empty.")
         // Arrange
         public void shouldGetUserByIdWithSuccessWhenOptionalIsEmpty() {
             var userId = UUID.randomUUID();
@@ -148,7 +170,7 @@ public class UserServiceTest {
     public class listUsers {
 
         @Test
-        @DisplayName("Should return all users with success")
+        @DisplayName("Should return all users with success.")
         public void shouldReturnAllUsersWithSuccess() {
             // Arrange
             var user = new User(
@@ -177,11 +199,11 @@ public class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("Tests for Deleting User")
+    @DisplayName("Tests for Deleting User.")
     public class DeleteUserById {
 
         @Test
-        @DisplayName("Should delete user with success when it exists")
+        @DisplayName("Should delete user with success when it exists.")
         public void shouldDeleteUserWithSuccessWhenItExists() {
             // Arrange
             doReturn(true)
@@ -208,7 +230,7 @@ public class UserServiceTest {
         }
 
         @Test
-        @DisplayName("Should not delete user when it does not exist")
+        @DisplayName("Should not delete user when it does not exist.")
         public void shouldNotDeleteUserWhenItDoesNotExist() {
             // Arrange
             doReturn(false)
@@ -229,11 +251,11 @@ public class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("Tests for Updating User by ID")
+    @DisplayName("Tests for Updating User by ID.")
     public class updateUserById {
 
         @Test
-        @DisplayName("Should update user by id when it exists and username and password are filled")
+        @DisplayName("Should update user by id when it exists and username and password are filled.")
         public void shouldUpdateUserByIdWhenItExistsAndUsernameAndPasswordAreFilled() {
             // Arrange
             var updateUserDto = new UpdateUserDto("newUsername", "newPassword");
@@ -264,7 +286,7 @@ public class UserServiceTest {
         }
 
         @Test
-        @DisplayName("Should not update user by id when it does not exists")
+        @DisplayName("Should not update user by id when it does not exists.")
         public void shouldNotUpdateUserByIdWhenItDoesNotExists() {
             // Arrange
             var updateUserDto = new UpdateUserDto(
@@ -287,6 +309,78 @@ public class UserServiceTest {
 
             verify(userRepository, times(1)).findById(uuidArgumentCaptor.getValue());
             verify(userRepository, times(0)).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for Account Management.")
+    public class AccountManagementTests {
+
+        @Test
+        @DisplayName("Should create account and billing address successfully.")
+        public void createAccount_Success() {
+            // Arrange
+            var userId = UUID.randomUUID();
+            var user = new User();
+            user.setUserId(userId);
+            var dto = new CreateAccountDto("Main Wallet", "Street 123", 100);
+            var account = new Account();
+            account.setAccountId(UUID.randomUUID());
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(accountMapper.toEntity(dto, user)).thenReturn(account);
+            when(accountRepository.save(account)).thenReturn(account);
+
+            // Act
+            userService.createAccount(userId.toString(), dto);
+
+            // Assert
+            verify(accountRepository).save(account);
+            verify(billingAddressRepository).save(any());
+            verify(billingAddressMapper).toEntity(eq(dto), eq(account));
+        }
+
+        @Test
+        @DisplayName("Should list all accounts for a user.")
+        public void listAllAccounts_Success() {
+            // Arrange
+            var userId = UUID.randomUUID();
+            var user = new User();
+            user.setUserId(userId);
+            var account = new Account();
+            account.setAccountId(UUID.randomUUID());
+            user.setAccounts(List.of(account));
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(accountService.listAllStocks(anyString())).thenReturn(new ArrayList<>());
+
+            // Act
+            var result = userService.listAllAccounts(userId.toString());
+
+            // Assert
+            assertNotNull(result);
+            verify(accountMapper, times(1)).toDto(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for Updating User.")
+    public class UpdateUserTests {
+
+        @Test
+        @DisplayName("Should update only username when password is null.")
+        public void shouldUpdateOnlyUsername() {
+            var userId = UUID.randomUUID();
+            var updateDto = new UpdateUserDto("newUsername", null);
+            var existingUser = new User("old", "old@email.com", "pass");
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
+            userService.updateUserById(userId.toString(), updateDto);
+
+            verify(userRepository).save(userArgumentCaptor.capture());
+            assertEquals("newUsername", userArgumentCaptor.getValue().getUsername());
+            verify(passwordEncoder, never()).encode(any());
         }
     }
 
