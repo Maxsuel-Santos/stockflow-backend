@@ -5,6 +5,7 @@ import github.maxsuel.agregadordeinvestimentos.dto.request.auth.CreateUserDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.auth.LoginDto;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
 import github.maxsuel.agregadordeinvestimentos.entity.enums.Role;
+import github.maxsuel.agregadordeinvestimentos.exceptions.DuplicatedDataException;
 import github.maxsuel.agregadordeinvestimentos.mapper.UserMapper;
 import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,41 +40,58 @@ public class AuthServiceTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private BlacklistService blacklistService;
+
     @InjectMocks
     private AuthService authService;
 
     @Nested
-    @DisplayName("Tests for Register")
+    @DisplayName("Tests for Register.")
     public class RegisterTests {
 
         @Test
-        @DisplayName("Should register user with hashed password")
+        @DisplayName("Should register user with hashed password.")
         public void shouldRegisterUserWithSuccess() {
-            // Arrange
+            // Arrange & Act
             var dto = new CreateUserDto("username", "user@email.com", "plainPassword");
             var user = new User();
+            user.setUserId(UUID.randomUUID());
 
-            // Act
-            when(userMapper.toEntity(any(), anyString())).thenReturn(user);
-            when(passwordEncoder.encode(any())).thenReturn("hashed");
+            when(userRepository.existsByUsername(dto.username())).thenReturn(false);
+            when(userRepository.existsByEmail(dto.email())).thenReturn(false);
+            when(passwordEncoder.encode(dto.password())).thenReturn("hashed");
+            when(userMapper.toEntity(eq(dto), anyString())).thenReturn(user);
             when(userRepository.save(any())).thenReturn(user);
+            when(tokenService.generateToken(any())).thenReturn("token-123");
 
-            authService.register(dto);
+            var result = authService.register(dto);
 
             // Assert
-            verify(userMapper).toEntity(eq(dto), anyString());
+            assertNotNull(result);
+            assertEquals("token-123", result.accessToken());
             verify(userRepository).save(user);
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicatedDataException when username exists.")
+        public void shouldThrowExceptionWhenUsernameExists() {
+            var dto = new CreateUserDto("existingUser", "user@email.com", "pass");
+            when(userRepository.existsByUsername(dto.username())).thenReturn(true);
+
+            assertThrows(DuplicatedDataException.class, () -> authService.register(dto));
+            verify(userRepository, never()).save(any());
         }
 
     }
 
     @Nested
     @DisplayName("Tests for Login")
-    class LoginTests {
+    public class LoginTests {
 
         @Test
         @DisplayName("Should login and return token when credentials are valid")
-        void shouldLoginWithSuccess() {
+        public void shouldLoginWithSuccess() {
             // Arrange
             var dto = new LoginDto("user", "plainPassword");
             var user = new User("user", "user@email.com", "hashedPassword", Role.ADMIN);
@@ -92,7 +111,7 @@ public class AuthServiceTest {
 
         @Test
         @DisplayName("Should throw BadCredentialsException when password does not match")
-        void shouldThrowExceptionWhenPasswordInvalid() {
+        public void shouldThrowExceptionWhenPasswordInvalid() {
             // Arrange
             var dto = new LoginDto("nonExistent", "anyPass");
             when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
@@ -103,7 +122,7 @@ public class AuthServiceTest {
 
         @Test
         @DisplayName("Should throw UserNotFoundException when user does not exist")
-        void shouldThrowExceptionWhenUserNotFound() {
+        public void shouldThrowExceptionWhenUserNotFound() {
             // Arrange
             var dto = new LoginDto("nonExistent", "anyPass");
             when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
@@ -111,6 +130,32 @@ public class AuthServiceTest {
             // Act & Assert
             assertThrows(BadCredentialsException.class, () -> authService.login(dto));
         }
+
+    }
+
+    @Nested
+    @DisplayName("Logout & Session Tests.")
+    public class SessionTests {
+
+        @Test
+        @DisplayName("Should add token to blacklist on logout.")
+        public void shouldLogoutWithSuccess() {
+            // Arrange & Act
+            String header = "Bearer my-token";
+
+            authService.logout(header);
+
+            // Assert
+            verify(blacklistService).blacklistToken("my-token");
+        }
+
+        @Test
+        @DisplayName("Should throw exception when authenticated user is null.")
+        public void shouldThrowExceptionWhenUserIsNull() {
+            // Arrange, Act & Assert
+            assertThrows(BadCredentialsException.class, () -> authService.getAuthenticatedUserDto(null));
+        }
+
     }
 
 }
