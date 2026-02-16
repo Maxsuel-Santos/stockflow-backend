@@ -24,9 +24,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/users")
@@ -41,18 +43,25 @@ public class UserController {
 
     @Operation(
         summary = "Search user by ID",
-        description = "Retrieves full details of a specific user. Use this to fetch profile information."
+        description = "Retrieves full details of a specific user. Use this to fetch profile information.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
             description = "User found successfully.",
-            content = @Content(schema = @Schema(implementation = User.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = User.class)
+            )
         ),
         @ApiResponse(
             responseCode = "404",
             description = "User ID does not exist in the database.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @GetMapping("/{userId}")
@@ -64,12 +73,16 @@ public class UserController {
 
     @Operation(
         summary = "List all registered users",
-        description = "Administrative endpoint to retrieve a list of every user in the system."
+        description = "Administrative endpoint to retrieve a list of every user in the system.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponse(
         responseCode = "200",
         description = "List of users retrieved successfully.",
-        content = @Content(array = @ArraySchema(schema = @Schema(implementation = User.class)))
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON_VALUE,
+            array = @ArraySchema(schema = @Schema(implementation = User.class))
+        )
     )
     @GetMapping("/all")
     public ResponseEntity<List<User>> listAllUsers() {
@@ -78,19 +91,26 @@ public class UserController {
 
     @Operation(
         summary = "Update user data",
-        description = "Modifies existing user information (e.g., name or email). Only provided fields will be updated."
+        description = "Modifies existing user information (e.g., name or email). Only provided fields will be updated.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "User updated successfully."),
         @ApiResponse(
             responseCode = "404",
             description = "User not found.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         ),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid update data.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @PutMapping("/{userId}")
@@ -102,12 +122,15 @@ public class UserController {
 
     @Operation(
         summary = "Remove a user from the system.",
-        description = "Deletes a user based on the provided user ID."
+        description = "Deletes a user based on the provided user ID.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponse(
         responseCode = "204",
         description = "User successfully deleted.",
-        content = @Content
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON_VALUE
+        )
     )
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable("userId") String userId) {
@@ -117,14 +140,18 @@ public class UserController {
 
     @Operation(
         summary = "Create an account for the user",
-        description = "Initializes a new investment portfolio (Account) for a specific user."
+        description = "Initializes a new investment portfolio (Account) for a specific user.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Account successfully created."),
         @ApiResponse(
             responseCode = "404",
             description = "User not found.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @PostMapping("/{userId}/accounts")
@@ -136,18 +163,25 @@ public class UserController {
 
     @Operation(
         summary = "List all user accounts",
-        description = "Retrieves all accounts owned by the user, including consolidated stock portfolios and real-time market values."
+        description = "Retrieves all accounts owned by the user, including consolidated stock portfolios and real-time market values.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
             description = "Accounts and portfolios retrieved successfully.",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = AccountResponseDto.class)))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                array = @ArraySchema(schema = @Schema(implementation = AccountResponseDto.class))
+        )
         ),
         @ApiResponse(
             responseCode = "404",
             description = "User not found.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @GetMapping("/{userId}/accounts")
