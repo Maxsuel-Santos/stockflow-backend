@@ -11,7 +11,7 @@ Esta é uma API RESTful de alta performance projetada para gestão de ativos fin
 
 ## 🖼️ Arquitetura e Modelo de Dados
 
-Abaixo está o diagrama que ilustra o relacionamento entre as entidades do sistema (Usuários, Contas, Ações e Endereços).
+Abaixo está o diagrama que ilustra o relacionamento entre as entidades do sistema (User, Transactions, Stock, Account, Account Stock e Billing Address).
 
 ![Diagrama de Relacionamento](agregador-de-investimentos-MER.png)
 
