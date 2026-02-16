@@ -163,7 +163,6 @@ class AccountServiceTest {
             var result = accountService.fallbackListStocks("any-id", new RuntimeException());
 
             assertFalse(result.isEmpty());
-            // CORREÇÃO AQUI: stockId deve ser "N/A" e name deve ser "Service unavailable"
             assertEquals("N/A", result.getFirst().stockId());
             assertEquals("Service unavailable", result.getFirst().name());
         }
