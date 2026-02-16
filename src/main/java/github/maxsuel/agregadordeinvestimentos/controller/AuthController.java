@@ -2,9 +2,6 @@ package github.maxsuel.agregadordeinvestimentos.controller;
 
 import java.net.URI;
 
-import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
-import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,19 +13,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import github.maxsuel.agregadordeinvestimentos.dto.response.auth.AuthResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.auth.CreateUserDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.auth.LoginDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.auth.AuthResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.response.auth.UserDto;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
+import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
 import github.maxsuel.agregadordeinvestimentos.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -59,7 +59,10 @@ public class AuthController {
         @ApiResponse(
             responseCode = "400",
             description = "Invalid input data or email already exists",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @PostMapping("/register")
@@ -84,7 +87,10 @@ public class AuthController {
         @ApiResponse(
             responseCode = "401",
             description = "Invalid email or password",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @PostMapping("/login")
@@ -102,12 +108,18 @@ public class AuthController {
         @ApiResponse(
             responseCode = "200",
             description = "User data retrieved successfully",
-            content = @Content(schema = @Schema(implementation = UserDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = UserDto.class)
+            )
         ),
         @ApiResponse(
             responseCode = "401",
             description = "Unauthorized - JWT token is missing, expired or invalid",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @GetMapping("/me")
@@ -131,7 +143,10 @@ public class AuthController {
         @ApiResponse(
             responseCode = "401",
             description = "Unauthorized",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @PostMapping("/logout")

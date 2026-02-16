@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,17 +33,22 @@ public class StockController {
 
     @Operation(
         summary = "Register a new stock in the catalog",
-        description = "Adds a valid ticker (ex: AAPL, ITUB4) to the system's database so it can be traded."
+        description = "Adds a valid ticker (ex: AAPL, ITUB4) to the system's database so it can be traded.",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
-            description = "Stock successfully registered."
-        ),
+            description = "Stock successfully registered.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+        ),                                      
         @ApiResponse(
             responseCode = "400",
             description = "Invalid stock data or ticker already exists.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @PostMapping
@@ -62,14 +68,17 @@ public class StockController {
             responseCode = "200",
             description = "List of owned stocks retrieved successfully.",
             content = @Content(
-                mediaType = "application/json",
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
                 array = @ArraySchema(schema = @Schema(implementation = UserStockSummaryDto.class))
             )
         ),
         @ApiResponse(
             responseCode = "401",
             description = "Unauthorized - Missing or invalid JWT token.",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
         )
     })
     @GetMapping

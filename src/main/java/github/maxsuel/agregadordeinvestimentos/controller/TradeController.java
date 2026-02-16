@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 
@@ -48,13 +49,34 @@ public class TradeController {
         security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Purchase executed successfully"),
-        @ApiResponse(responseCode = "400", description = "Insufficient funds, invalid quantity, or inactive asset",
-                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Valid JWT required",
-                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-        @ApiResponse(responseCode = "404", description = "User, Account or Stock ticker not found",
-                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+        @ApiResponse(
+            responseCode = "200", description = "Purchase executed successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+        ),
+        @ApiResponse(
+            responseCode = "400", 
+            description = "Insufficient funds, invalid quantity, or inactive asset",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE, 
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401", 
+            description = "Unauthorized - Valid JWT required",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE, 
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "User, Account or Stock ticker not found",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE, 
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        )
     })
     @PostMapping("/buy")
     public ResponseEntity<Void> buy(@RequestBody @Valid TradeRequestDto dto,
