@@ -56,6 +56,7 @@ public class AccountRepositoryTest {
             // Assert
             assertThat(result).isEmpty();
         }
+
     }
 
     @Nested
@@ -96,6 +97,7 @@ public class AccountRepositoryTest {
             assert updatedAccount != null;
             assertThat(updatedAccount.getDescription()).isEqualTo("Updated Name");
         }
+
     }
 
     // Helper methods

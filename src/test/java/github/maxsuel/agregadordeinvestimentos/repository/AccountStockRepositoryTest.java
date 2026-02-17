@@ -61,6 +61,7 @@ public class AccountStockRepositoryTest {
             // Assert
             assertThat(result).isEmpty();
         }
+
     }
 
     @Nested
@@ -87,6 +88,7 @@ public class AccountStockRepositoryTest {
             assertThat(saved.getQuantity()).isEqualTo(50);
             assertThat(saved.getAveragePrice()).isEqualByComparingTo("110.00");
         }
+
     }
 
     // Helper methods
@@ -109,4 +111,5 @@ public class AccountStockRepositoryTest {
         AccountStock accountStock = new AccountStock(id, account, stock, qty, price);
         entityManager.persist(accountStock);
     }
+
 }

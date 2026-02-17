@@ -60,6 +60,7 @@ public class BillingAddressRepositoryTest {
             // Assert
             assertThat(result).isEmpty();
         }
+
     }
 
     @Nested
@@ -86,6 +87,7 @@ public class BillingAddressRepositoryTest {
             assertThat(savedAddress.getId()).isEqualTo(account.getAccountId());
             assertThat(savedAddress.getStreet()).isEqualTo("Rua das Flores");
         }
+
     }
 
     // Helper methods
@@ -106,4 +108,5 @@ public class BillingAddressRepositoryTest {
         address.setNumber(number);
         entityManager.persist(address);
     }
+
 }
