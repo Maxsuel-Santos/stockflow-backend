@@ -35,6 +35,7 @@ public class TradeService {
     @Transactional
     public void executeBuy(@NonNull User user, @NonNull TradeRequestDto dto) {
         var response = brapiClient.getQuote(TOKEN, dto.stockId());
+        var stockData = response.results().getFirst();
 
         BigDecimal currentPrice = BigDecimal.valueOf(response.results().getFirst().regularMarketPrice());
         BigDecimal totalCost = currentPrice.multiply(BigDecimal.valueOf(dto.quantity()));
@@ -47,8 +48,12 @@ public class TradeService {
 
         var account = accountRepository.findById(dto.accountId())
                 .orElseThrow(() -> new AccountNotFoundException("Account not found."));
+
         var stock = stockRepository.findById(dto.stockId())
-                .orElseThrow(() -> new StockNotFoundException("Stock ticker not recognized."));
+                .orElseGet(() -> {
+                    Stock newStock = new Stock(dto.stockId(), stockData.longName());
+                    return stockRepository.save(newStock);
+                });
 
         var id = new AccountStockId(dto.accountId(), dto.stockId());
         AccountStock accountStock = accountStockRepository.findById(id)
