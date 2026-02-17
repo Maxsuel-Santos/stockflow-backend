@@ -1,6 +1,9 @@
 package github.maxsuel.agregadordeinvestimentos.controller;
 
+import github.maxsuel.agregadordeinvestimentos.dto.request.account.CreateAccountDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.user.UpdateUserDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountResponseDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountStockResponseDto;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
 import github.maxsuel.agregadordeinvestimentos.exceptions.UserNotFoundException;
 import github.maxsuel.agregadordeinvestimentos.service.UserService;
@@ -169,4 +172,69 @@ public class UserControllerTest {
             });
         }
     }
+
+    @Nested
+    @DisplayName("Tests for Account Management")
+    public class AccountManagement {
+
+        @Test
+        @DisplayName("Should return 200 OK when account is created successfully")
+        public void shouldReturn200OkOnCreateAccount() {
+            // Arrange
+            var userId = UUID.randomUUID().toString();
+            var dto = new CreateAccountDto(
+                    "Carteira de dividendos",
+                    "Olívia Flores",
+                    1500
+            );
+
+            doNothing().when(userService).createAccount(userId, dto);
+
+            // Act
+            var response = userController.createAccount(userId, dto);
+
+            // Assert
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(userService, times(1)).createAccount(userId, dto);
+        }
+
+        @Test
+        @DisplayName("Should return 200 OK and list of accounts with detailed stock info")
+        public void shouldReturnAccountsWithDetailedStocksSuccess() {
+            // Arrange
+            var userId = UUID.randomUUID().toString();
+
+            var detailedStockDto = new AccountStockResponseDto(
+                    "ITUB4",
+                    "Itaú Unibanco",
+                    "Banco Itaú Unibanco PN",
+                    100,
+                    32.45,
+                    3245.00,
+                    "https://icons.brapi.dev/icons/ITUB4.svg"
+            );
+
+            var accountDto = new AccountResponseDto(
+                    UUID.randomUUID().toString(),
+                    "Carteira de Longo Prazo",
+                    List.of(detailedStockDto)
+            );
+
+            when(userService.listAllAccounts(userId)).thenReturn(List.of(accountDto));
+
+            // Act
+            var response = userController.listAllAccounts(userId);
+
+            // Assert
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+
+            var stockResult = response.getBody().getFirst().stocks().getFirst();
+            assertEquals("ITUB4", stockResult.stockId());
+            assertEquals("Itaú Unibanco", stockResult.name());
+            assertEquals(3245.00, stockResult.total());
+            assertNotNull(stockResult.logoUrl());
+        }
+    }
+
 }
