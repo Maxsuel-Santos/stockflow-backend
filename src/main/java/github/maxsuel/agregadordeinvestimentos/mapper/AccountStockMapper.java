@@ -12,7 +12,7 @@ import java.math.RoundingMode;
 @Mapper(componentModel = "spring")
 public interface AccountStockMapper {
 
-    @Mapping(target = "stockId", source = "accountStock.stock.stockId")
+    @Mapping(target = "stockId", source = "stockDto.stock")
     @Mapping(target = "name", source = "stockDto.shortName")
     @Mapping(target = "longName", source = "stockDto.longName")
     @Mapping(target = "quantity", source = "accountStock.quantity")
@@ -22,11 +22,8 @@ public interface AccountStockMapper {
     AccountStockResponseDto toDto(AccountStock accountStock, StockDto stockDto);
 
     default double calculateTotal(double quantity, double price) {
-        double totalRaw = quantity * price;
-
-        return BigDecimal.valueOf(totalRaw)
+        return BigDecimal.valueOf(quantity * price)
                 .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
     }
-
 }
