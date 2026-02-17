@@ -11,17 +11,17 @@ import org.mapstruct.factory.Mappers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Tests for Account Mapper.")
-class AccountMapperTest {
+public class AccountMapperTest {
 
     private final AccountMapper mapper = Mappers.getMapper(AccountMapper.class);
 
     @Nested
     @DisplayName("Tests for Mapping to Entity.")
-    class ToEntityMappingTests {
+    public class ToEntityMappingTests {
 
         @Test
         @DisplayName("Should map CreateAccountDto and User to Account Entity with BillingAddress correctly.")
-        void shouldMapToEntityWithAddressSuccess() {
+        public void shouldMapToEntityWithAddressSuccess() {
             // Arrange
             var description = "Dividendos";
             var street = "Rua A";
