@@ -8,9 +8,7 @@ import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountRespo
 import github.maxsuel.agregadordeinvestimentos.dto.request.account.CreateAccountDto;
 import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountStockResponseDto;
 import github.maxsuel.agregadordeinvestimentos.mapper.AccountMapper;
-import github.maxsuel.agregadordeinvestimentos.mapper.BillingAddressMapper;
 import github.maxsuel.agregadordeinvestimentos.repository.AccountRepository;
-import github.maxsuel.agregadordeinvestimentos.repository.BillingAddressRepository;
 import lombok.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,10 +29,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final AccountService accountService;
-    private final BillingAddressRepository billingAddressRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountMapper accountMapper;
-    private final BillingAddressMapper billingAddressMapper;
 
     public Optional<User> getUserById(String userId) {
         return userRepository.findById(UUID.fromString(userId));
@@ -83,11 +79,9 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
         var account = accountMapper.toEntity(createAccountDto, user);
-        var accountSaved = accountRepository.save(account);
 
-        var billingAddress = billingAddressMapper.toEntity(createAccountDto, accountSaved);
+        accountRepository.save(account);
 
-        billingAddressRepository.save(billingAddress);
         log.info("Account and BillingAddress created for user: {}", userId);
     }
 
