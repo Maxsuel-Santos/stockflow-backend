@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -80,9 +81,11 @@ class StockServiceTest {
 
             var stock = new Stock();
             stock.setStockId("ITUB4");
+            stock.setDescription("Itau Unibanco");
 
-            var as1 = new AccountStock(null, acc1, stock, 10, null);
-            var as2 = new AccountStock(null, acc2, stock, 15, null);
+            // Adicionando quantidades e preços médios (BigDecimal)
+            var as1 = new AccountStock(null, acc1, stock, 10, BigDecimal.valueOf(30.00));
+            var as2 = new AccountStock(null, acc2, stock, 15, BigDecimal.valueOf(40.00));
 
             acc1.setAccountStocks(List.of(as1));
             acc2.setAccountStocks(List.of(as2));
@@ -96,8 +99,14 @@ class StockServiceTest {
             // Assert
             assertNotNull(result);
             assertEquals(1, result.size());
-            assertEquals("ITUB4", result.getFirst().stockId());
-            assertEquals(25, result.getFirst().totalQuantity()); // 10 + 15
+            var dto = result.getFirst();
+            assertEquals("ITUB4", dto.stockId());
+            assertEquals(25, dto.quantity());
+
+            //  ((10 * 30) + (15 * 40)) / 25 = (300 + 600) / 25 = 36.00
+            assertEquals(36.00, dto.price(), 0.001);
+            assertEquals(900.00, dto.total(), 0.001);
+            assertTrue(dto.logoUrl().contains("ITUB4"));
         }
 
         @Test

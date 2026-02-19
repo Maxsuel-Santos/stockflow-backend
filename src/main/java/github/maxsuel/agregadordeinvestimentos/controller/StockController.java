@@ -1,6 +1,7 @@
 package github.maxsuel.agregadordeinvestimentos.controller;
 
 import github.maxsuel.agregadordeinvestimentos.dto.request.stock.CreateStockDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountStockResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.response.stock.UserStockSummaryDto;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
 import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
@@ -82,7 +83,7 @@ public class StockController {
         )
     })
     @GetMapping
-    public ResponseEntity<List<UserStockSummaryDto>> getOwnedStocks(@Parameter(hidden = true) @AuthenticationPrincipal User user) {
+    public ResponseEntity<List<AccountStockResponseDto>> getOwnedStocks(@Parameter(hidden = true) @AuthenticationPrincipal User user) {
         var ownedStocks = stockService.listOwnedStocks(user);
 
         return ResponseEntity.ok(ownedStocks);
