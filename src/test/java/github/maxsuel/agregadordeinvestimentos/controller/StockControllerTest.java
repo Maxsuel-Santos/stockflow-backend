@@ -1,7 +1,7 @@
 package github.maxsuel.agregadordeinvestimentos.controller;
 
 import github.maxsuel.agregadordeinvestimentos.dto.request.stock.CreateStockDto;
-import github.maxsuel.agregadordeinvestimentos.dto.response.stock.UserStockSummaryDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountStockResponseDto;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
 import github.maxsuel.agregadordeinvestimentos.service.StockService;
 import org.junit.jupiter.api.DisplayName;
@@ -53,19 +53,36 @@ public class StockControllerTest {
 
     @Nested
     @DisplayName("Tests for User Portfolio Insights.")
-    class PortfolioInsightsTests {
+    public class PortfolioInsightsTests {
 
         @Test
         @DisplayName("Should return 200 OK and consolidated stock list for user.")
-        void shouldReturnOwnedStocksWithSuccess() {
+        public void shouldReturnOwnedStocksWithSuccess() {
             // Arrange
             var mockUser = new User();
-            var summaryList = List.of(
-                    new UserStockSummaryDto("ITUB4", 150),
-                    new UserStockSummaryDto("PETR4", 50)
+
+            var detailedList = List.of(
+                    new AccountStockResponseDto(
+                            "ITUB4",
+                            "Itau",
+                            "Itau Unibanco PN",
+                            150,
+                            32.45,
+                            4867.50,
+                            "https://icons.brapi.dev/icons/ITUB4.svg"
+                    ),
+                    new AccountStockResponseDto(
+                            "PETR4",
+                            "Petrobras",
+                            "Petroleo Brasileiro SA",
+                            50,
+                            38.20,
+                            1910.00,
+                            "https://icons.brapi.dev/icons/PETR4.svg"
+                    )
             );
 
-            when(stockService.listOwnedStocks(mockUser)).thenReturn(summaryList);
+            when(stockService.listOwnedStocks(mockUser)).thenReturn(detailedList);
 
             // Act
             var response = stockController.getOwnedStocks(mockUser);
@@ -74,11 +91,16 @@ public class StockControllerTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().size());
-            assertEquals("ITUB4", response.getBody().getFirst().stockId());
-            assertEquals(150, response.getBody().getFirst().totalQuantity());
+
+            var firstStock = response.getBody().getFirst();
+            assertEquals("ITUB4", firstStock.stockId());
+            assertEquals(150, firstStock.quantity());
+            assertEquals(32.45, firstStock.price());
+            assertEquals(4867.50, firstStock.total());
 
             verify(stockService, times(1)).listOwnedStocks(mockUser);
         }
+
     }
 
 }
