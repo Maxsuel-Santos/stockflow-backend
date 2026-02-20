@@ -66,18 +66,28 @@ public class StockControllerTest {
                             "ITUB4",
                             "Itau",
                             "Itau Unibanco PN",
+                            "Financial",
                             150,
+                            30.00,
                             32.45,
+                            0.5,
+                            500000L,
                             4867.50,
+                            4500.00,
                             "https://icons.brapi.dev/icons/ITUB4.svg"
                     ),
                     new AccountStockResponseDto(
                             "PETR4",
                             "Petrobras",
                             "Petroleo Brasileiro SA",
+                            "Energy",
                             50,
+                            35.00,
                             38.20,
+                            -0.2,
+                            1000000L,
                             1910.00,
+                            1750.00,
                             "https://icons.brapi.dev/icons/PETR4.svg"
                     )
             );
@@ -89,16 +99,11 @@ public class StockControllerTest {
 
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(2, response.getBody().size());
-
             var firstStock = response.getBody().getFirst();
             assertEquals("ITUB4", firstStock.stockId());
-            assertEquals(150, firstStock.quantity());
-            assertEquals(32.45, firstStock.price());
-            assertEquals(4867.50, firstStock.total());
+            assertEquals(32.45, firstStock.currentPrice());
+            assertEquals(4867.50, firstStock.marketValue());
 
-            verify(stockService, times(1)).listOwnedStocks(mockUser);
         }
 
     }

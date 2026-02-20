@@ -51,7 +51,14 @@ public class TradeService {
 
         var stock = stockRepository.findById(dto.stockId())
                 .orElseGet(() -> {
-                    Stock newStock = new Stock(dto.stockId(), stockData.longName());
+                    Stock newStock = new Stock(
+                            dto.stockId(),
+                            stockData.shortName(),
+                            stockData.longName(),
+                            null,
+                            stockData.logourl(),
+                            stockData.longName()
+                    );
                     return stockRepository.save(newStock);
                 });
 

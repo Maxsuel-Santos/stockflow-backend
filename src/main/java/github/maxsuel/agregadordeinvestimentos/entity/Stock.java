@@ -21,6 +21,18 @@ public class Stock {
     @Column(name = "stock_id", nullable = false, unique = true)
     private String stockId;
 
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "long_name")
+    private String longName;
+
+    @Column(name = "sector")
+    private String sector;
+
+    @Column(name = "logo_url")
+    private String logoUrl;
+
     @Column(name = "description", nullable = false)
     private String description;
 

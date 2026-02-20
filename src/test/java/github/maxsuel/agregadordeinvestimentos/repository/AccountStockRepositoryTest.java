@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,13 +56,12 @@ public class AccountStockRepositoryTest {
         @DisplayName("Should return empty when composite ID does not exist.")
         public void findByIdNotFound() {
             // Act
-            AccountStockId id = new AccountStockId(java.util.UUID.randomUUID(), "GHOST4");
+            AccountStockId id = new AccountStockId(UUID.randomUUID(), "GHOST4");
             Optional<AccountStock> result = accountStockRepository.findById(id);
 
             // Assert
             assertThat(result).isEmpty();
         }
-
     }
 
     @Nested
@@ -88,7 +88,6 @@ public class AccountStockRepositoryTest {
             assertThat(saved.getQuantity()).isEqualTo(50);
             assertThat(saved.getAveragePrice()).isEqualByComparingTo("110.00");
         }
-
     }
 
     // Helper methods
@@ -103,7 +102,7 @@ public class AccountStockRepositoryTest {
     }
 
     private Stock createAndPersistStock(String ticker, String name) {
-        Stock stock = new Stock(ticker, name);
+        Stock stock = new Stock(ticker, name, name + " S.A.", "Sector", "http://logo.url", "Description");
         return entityManager.persist(stock);
     }
 

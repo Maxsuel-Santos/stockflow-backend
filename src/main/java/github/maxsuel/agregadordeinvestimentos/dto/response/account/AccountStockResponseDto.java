@@ -29,6 +29,13 @@ public record AccountStockResponseDto(
 
     @NotNull
     @Schema(
+        description = "Industry",
+        example = "Energy"
+    )
+    String sector,
+
+    @NotNull
+    @Schema(
         description = "Total quantity of the stock in the portfolio.",
         example = "100"
     )
@@ -36,10 +43,38 @@ public record AccountStockResponseDto(
 
     @NotNull
     @Schema(
-        description = "Average price paid per unit of the stock.",
+        description = "Average purchase price (User cost)",
         example = "32.45"
     )
-    double price,
+    double avgPrice,
+
+    @NotNull
+    @Schema(
+        description = "Current market price (Brapi)",
+        example = "37.70"
+    )
+    double currentPrice,
+
+    @NotNull
+    @Schema(
+        description = "Percentage change on the day",
+        example = "-0.29"
+    )
+    double change,
+
+    @NotNull
+    @Schema(
+        description = "Daily trading volume",
+        example = "489500"
+    )
+    long volume,
+
+    @NotNull
+    @Schema(
+        description = "Total value at market price (Qty * CurrentPrice)",
+        example = "5655.00"
+    )
+    double marketValue,
 
     @NotNull
     @Schema(

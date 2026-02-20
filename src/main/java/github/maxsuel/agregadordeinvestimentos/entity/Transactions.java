@@ -39,7 +39,7 @@ public class Transactions {
     @Enumerated(EnumType.STRING)
     private TradeType type;
 
-    @Column(nullable = false)
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     @Column(name = "price_at_time", precision = 19, scale = 4, nullable = false)
