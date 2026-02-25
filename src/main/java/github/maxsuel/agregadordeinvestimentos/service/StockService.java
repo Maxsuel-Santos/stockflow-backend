@@ -7,7 +7,6 @@ import github.maxsuel.agregadordeinvestimentos.entity.AccountStock;
 import github.maxsuel.agregadordeinvestimentos.entity.User;
 import github.maxsuel.agregadordeinvestimentos.exceptions.UserNotFoundException;
 import github.maxsuel.agregadordeinvestimentos.mapper.StockMapper;
-import github.maxsuel.agregadordeinvestimentos.mapper.UserMapper;
 import github.maxsuel.agregadordeinvestimentos.repository.StockRepository;
 import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -66,13 +65,22 @@ public class StockService {
                             : 0.0;
 
                     try {
-                        var market = brapiClient.getQuote(TOKEN, stock.getStockId()).results().getFirst();
+                        var response = brapiClient.getQuote(TOKEN, stock.getStockId(), "summaryProfile");
+                        var market = response.results().getFirst();
+
+                        String sector = "N/A";
+
+                        if (market.summaryProfile() != null && market.summaryProfile().sector() != null) {
+                            sector = market.summaryProfile().sector();
+                        } else if (stock.getSector() != null) {
+                            sector = stock.getSector();
+                        }
 
                         return new AccountStockResponseDto(
                                 stock.getStockId(),
                                 market.shortName(),
                                 market.longName(),
-                                stock.getSector() != null ? stock.getSector() : "N/A",
+                                sector,
                                 totalQty,
                                 avgPrice,
                                 market.regularMarketPrice(),
@@ -85,9 +93,15 @@ public class StockService {
                     } catch (Exception e) {
                         log.error("Failed to fetch Brapi data for {}: {}", stock.getStockId(), e.getMessage());
                         return new AccountStockResponseDto(
-                                stock.getStockId(), stock.getName(), stock.getLongName(),
-                                stock.getSector(), totalQty, avgPrice, 0.0, 0.0, 0L, 0.0,
-                                totalInvested.doubleValue(), stock.getLogoUrl()
+                                stock.getStockId(),
+                                stock.getName(),
+                                stock.getLongName(),
+                                stock.getSector() != null ? stock.getSector() : "N/A",
+                                totalQty,
+                                avgPrice,
+                                0.0, 0.0, 0L, 0.0,
+                                totalInvested.doubleValue(),
+                                stock.getLogoUrl()
                         );
                     }
                 }).toList();

@@ -1,6 +1,7 @@
 package github.maxsuel.agregadordeinvestimentos.mapper;
 
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.StockDto;
+import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.SummaryProfileDto;
 import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountStockResponseDto;
 import github.maxsuel.agregadordeinvestimentos.entity.AccountStock;
 import github.maxsuel.agregadordeinvestimentos.entity.Stock;
@@ -46,7 +47,8 @@ public class AccountStockMapperTest {
                     0.5,
                     1000L,
                     "BRL",
-                    "https://logo.url"
+                    "https://logo.url",
+                    new SummaryProfileDto("Energy")
             );
 
             // Act

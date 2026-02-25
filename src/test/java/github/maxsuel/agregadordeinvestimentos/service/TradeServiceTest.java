@@ -3,6 +3,7 @@ package github.maxsuel.agregadordeinvestimentos.service;
 import github.maxsuel.agregadordeinvestimentos.client.BrapiClient;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.BrapiResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.StockDto;
+import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.SummaryProfileDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.stock.TradeRequestDto;
 import github.maxsuel.agregadordeinvestimentos.entity.*;
 import github.maxsuel.agregadordeinvestimentos.entity.enums.TradeType;
@@ -90,7 +91,8 @@ public class TradeServiceTest {
                 0.5,
                 1000000L,
                 "BRL",
-                "https://logo.url"
+                "https://logo.url",
+                new SummaryProfileDto("Mining")
         );
     }
 
@@ -123,7 +125,7 @@ public class TradeServiceTest {
 
             var existingStock = new AccountStock(new AccountStockId(accountId, stockId), account, stock, 10, new BigDecimal("30.00"));
 
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
             when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
             when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
             when(accountStockRepository.findById(any())).thenReturn(Optional.of(existingStock));
@@ -151,7 +153,7 @@ public class TradeServiceTest {
             var dto = new TradeRequestDto(stockId, 1000, accountId);
             var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto(stockId, 50.0)));
 
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
 
             // Assert
             assertThrows(InsufficientFundsException.class, () -> tradeService.executeBuy(user, dto));
@@ -174,7 +176,7 @@ public class TradeServiceTest {
             var existingStock = new AccountStock(null, new Account(), stock, 10, new BigDecimal("30.00"));
 
             when(accountStockRepository.findById(any())).thenReturn(Optional.of(existingStock));
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
 
             // Act
             tradeService.executeSell(user, dto);
@@ -196,7 +198,7 @@ public class TradeServiceTest {
             var existingStock = new AccountStock(null, new Account(), stock, 10, new BigDecimal("30.00"));
 
             when(accountStockRepository.findById(any())).thenReturn(Optional.of(existingStock));
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
 
             // Act
             tradeService.executeSell(user, dto);

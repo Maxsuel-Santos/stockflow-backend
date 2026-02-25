@@ -71,7 +71,7 @@ public class AccountService {
         return account.getAccountStocks()
                 .stream()
                 .map(as -> {
-                    var response = brapiClient.getQuote(TOKEN, as.getStock().getStockId());
+                    var response = brapiClient.getQuote(TOKEN, as.getStock().getStockId(), "summaryProfile");
                     var stockInfo = response.results().getFirst();
 
                     return accountStockMapper.toDto(as, stockInfo);
@@ -108,7 +108,7 @@ public class AccountService {
                 .map(as -> as.getStock().getStockId())
                 .collect(Collectors.joining(","));
 
-        var response = brapiClient.getQuote(TOKEN, tickers);
+        var response = brapiClient.getQuote(TOKEN, tickers, null);
 
         double total = account.getAccountStocks().stream()
                 .mapToDouble(as -> {
@@ -138,7 +138,7 @@ public class AccountService {
                     .map(as -> as.getStock().getStockId())
                     .collect(Collectors.joining(","));
 
-            var response = brapiClient.getQuote(TOKEN, tickers);
+            var response = brapiClient.getQuote(TOKEN, tickers, null);
 
             double totalValue = account.getAccountStocks().stream()
                     .mapToDouble(as -> {

@@ -3,6 +3,7 @@ package github.maxsuel.agregadordeinvestimentos.service;
 import github.maxsuel.agregadordeinvestimentos.client.BrapiClient;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.BrapiResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.StockDto;
+import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.SummaryProfileDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.account.AssociateAccountStockDto;
 import github.maxsuel.agregadordeinvestimentos.entity.*;
 import github.maxsuel.agregadordeinvestimentos.exceptions.AccountNotFoundException;
@@ -74,7 +75,8 @@ class AccountServiceTest {
                 0.0,
                 0L,
                 "BRL",
-                "http://logo.url"
+                "http://logo.url",
+                new SummaryProfileDto("Finance")
         );
     }
 
@@ -126,7 +128,7 @@ class AccountServiceTest {
             var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto("PETR4", 30.0)));
 
             when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
             when(accountStockMapper.calculateTotal(anyDouble(), anyDouble())).thenReturn(300.0);
 
             // Act
@@ -164,7 +166,7 @@ class AccountServiceTest {
             var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto("AAPL", 150.0)));
 
             when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
 
             var portfolio = accountService.getCompletePortfolio(user, accountId.toString());
 

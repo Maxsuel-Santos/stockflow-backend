@@ -3,6 +3,7 @@ package github.maxsuel.agregadordeinvestimentos.service;
 import github.maxsuel.agregadordeinvestimentos.client.BrapiClient;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.BrapiResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.StockDto;
+import github.maxsuel.agregadordeinvestimentos.dto.external.brapi.SummaryProfileDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.stock.CreateStockDto;
 import github.maxsuel.agregadordeinvestimentos.entity.Account;
 import github.maxsuel.agregadordeinvestimentos.entity.AccountStock;
@@ -106,12 +107,13 @@ class StockServiceTest {
                     0.5,
                     100L,
                     "BRL",
-                    "https://logo.url/ITUB4.svg"
+                    "https://logo.url/ITUB4.svg",
+                    new SummaryProfileDto("Finance")
             );
             var brapiResponse = new BrapiResponseDto(List.of(brapiStock));
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-            when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
+            when(brapiClient.getQuote(anyString(), anyString(), any())).thenReturn(brapiResponse);
 
             // Act
             var result = stockService.listOwnedStocks(user);

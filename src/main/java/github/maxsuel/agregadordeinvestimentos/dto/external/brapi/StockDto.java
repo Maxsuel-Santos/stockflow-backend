@@ -55,7 +55,14 @@ public record StockDto(
         example = "https://icons.brapi.dev/icons/PETR4.svg"
     )
     @JsonProperty("logourl")
-    String logourl
+    String logourl,
+
+    @Schema(
+        description = "Profile information containing the sector.",
+        example = "Tecnology"
+    )
+    @JsonProperty("summaryProfile")
+    SummaryProfileDto summaryProfile
 
 ) {
 }

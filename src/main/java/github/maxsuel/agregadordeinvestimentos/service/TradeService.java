@@ -34,7 +34,7 @@ public class TradeService {
 
     @Transactional
     public void executeBuy(@NonNull User user, @NonNull TradeRequestDto dto) {
-        var response = brapiClient.getQuote(TOKEN, dto.stockId());
+        var response = brapiClient.getQuote(TOKEN, dto.stockId(), "summaryProfile");
         var stockData = response.results().getFirst();
 
         BigDecimal currentPrice = BigDecimal.valueOf(response.results().getFirst().regularMarketPrice());
@@ -51,11 +51,13 @@ public class TradeService {
 
         var stock = stockRepository.findById(dto.stockId())
                 .orElseGet(() -> {
+                    String sector = (stockData.summaryProfile() != null) ? stockData.summaryProfile().sector() : "N/A";
+
                     Stock newStock = new Stock(
                             dto.stockId(),
                             stockData.shortName(),
                             stockData.longName(),
-                            null,
+                            sector,
                             stockData.logourl(),
                             stockData.longName()
                     );
@@ -92,7 +94,7 @@ public class TradeService {
             throw new InsufficientSharesException("Insufficient quantity for sale.");
         }
 
-        var response = brapiClient.getQuote(TOKEN, dto.stockId());
+        var response = brapiClient.getQuote(TOKEN, dto.stockId(), null);
         BigDecimal currentPrice = BigDecimal.valueOf(response.results().getFirst().regularMarketPrice());
         BigDecimal totalReceive = currentPrice.multiply(BigDecimal.valueOf(dto.quantity()));
 
