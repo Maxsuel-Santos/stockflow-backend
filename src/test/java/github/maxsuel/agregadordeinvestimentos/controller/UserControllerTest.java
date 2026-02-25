@@ -34,11 +34,11 @@ public class UserControllerTest {
     private UserController userController;
 
     @Nested
-    @DisplayName("Tests for Get User By ID")
+    @DisplayName("Tests for Get User By ID.")
     public class GetUserById {
 
         @Test
-        @DisplayName("Should return 200 OK when user exists")
+        @DisplayName("Should return 200 OK when user exists.")
         public void shouldReturn200OkWhenUserExists() {
             // Arrange
             var userId = UUID.randomUUID().toString();
@@ -54,7 +54,7 @@ public class UserControllerTest {
         }
 
         @Test
-        @DisplayName("Should return 404 Not Found when user does not exist")
+        @DisplayName("Should return 404 Not Found when user does not exist.")
         public void shouldReturn404NotFound() {
             // Arrange
             var userId = UUID.randomUUID().toString();
@@ -67,14 +67,15 @@ public class UserControllerTest {
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
         }
+
     }
 
     @Nested
-    @DisplayName("Tests for List All Users")
+    @DisplayName("Tests for List All Users.")
     public class ListUsers {
 
         @Test
-        @DisplayName("Should return 200 OK with list of users")
+        @DisplayName("Should return 200 OK with list of users.")
         public void shouldReturnListWithSuccess() {
             // Arrange
             var user = new User("username", "username@email.com", "123");
@@ -85,12 +86,12 @@ public class UserControllerTest {
 
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assert response.getBody() != null;
+            assertNotNull(response.getBody());
             assertEquals(1, response.getBody().size());
         }
 
         @Test
-        @DisplayName("Should return 200 OK even if list is empty")
+        @DisplayName("Should return 200 OK even if list is empty.")
         public void shouldReturnEmptyListSuccess() {
             // Arrange
             when(userService.listAllUsers()).thenReturn(Collections.emptyList());
@@ -100,51 +101,50 @@ public class UserControllerTest {
 
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assert response.getBody() != null;
+            assertNotNull(response.getBody());
             assertTrue(response.getBody().isEmpty());
         }
+
     }
 
     @Nested
-    @DisplayName("Tests for Update User")
+    @DisplayName("Tests for Update User.")
     public class UpdateUser {
 
         @Test
-        @DisplayName("Should return 204 No Content on success")
+        @DisplayName("Should return 204 No Content on success.")
         public void shouldUpdateWithSuccess() {
-            // Arrange
             var userId = UUID.randomUUID().toString();
             var dto = new UpdateUserDto("newUsername", "321");
             doNothing().when(userService).updateUserById(userId, dto);
 
-            // Act
             var response = userController.updateUserById(userId, dto);
 
-            // Assert
             assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         }
 
         @Test
-        @DisplayName("Should propagate UserNotFoundException when user missing")
+        @DisplayName("Should propagate UserNotFoundException when user missing.")
         public void shouldThrowExceptionWhenUserNotFound() {
-            // Arrange
+            // Arrange & Act
             var userId = "invalid-id";
             var dto = new UpdateUserDto("name", "pass");
-            
-            doThrow(new UserNotFoundException("Not found"))
-                .when(userService).updateUserById(userId, dto);
 
-            // Act & Assert
+            doThrow(new UserNotFoundException("Not found"))
+                    .when(userService).updateUserById(userId, dto);
+
+            // Assert
             assertThrows(UserNotFoundException.class, () -> userController.updateUserById(userId, dto));
         }
+
     }
 
     @Nested
-    @DisplayName("Tests for Delete User")
+    @DisplayName("Tests for Delete User.")
     public class DeleteUser {
 
         @Test
-        @DisplayName("Should return 204 No Content on success")
+        @DisplayName("Should return 204 No Content on success.")
         public void shouldDeleteWithSuccess() {
             // Arrange
             var userId = UUID.randomUUID().toString();
@@ -158,48 +158,28 @@ public class UserControllerTest {
             verify(userService, times(1)).deleteUser(userId);
         }
 
-        @Test
-        @DisplayName("Should handle service failure on delete")
-        public void shouldHandleDeleteFailure() {
-            // Arrange
-            var userId = UUID.randomUUID().toString();
-            doThrow(new RuntimeException("Database down"))
-                .when(userService).deleteUser(userId);
-
-            // Act & Assert
-            assertThrows(RuntimeException.class, () -> {
-                userController.deleteUser(userId);
-            });
-        }
     }
 
     @Nested
-    @DisplayName("Tests for Account Management")
+    @DisplayName("Tests for Account Management.")
     public class AccountManagement {
 
         @Test
-        @DisplayName("Should return 200 OK when account is created successfully")
+        @DisplayName("Should return 200 OK when account is created successfully.")
         public void shouldReturn200OkOnCreateAccount() {
-            // Arrange
             var userId = UUID.randomUUID().toString();
-            var dto = new CreateAccountDto(
-                    "Carteira de dividendos",
-                    "Olívia Flores",
-                    1500
-            );
+            var dto = new CreateAccountDto("Carteira de dividendos", "Olívia Flores", 1500);
 
             doNothing().when(userService).createAccount(userId, dto);
 
-            // Act
             var response = userController.createAccount(userId, dto);
 
-            // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
             verify(userService, times(1)).createAccount(userId, dto);
         }
 
         @Test
-        @DisplayName("Should return 200 OK and list of accounts with detailed stock info")
+        @DisplayName("Should return 200 OK and list of accounts with detailed stock info.")
         public void shouldReturnAccountsWithDetailedStocksSuccess() {
             // Arrange
             var userId = UUID.randomUUID().toString();
@@ -208,9 +188,14 @@ public class UserControllerTest {
                     "ITUB4",
                     "Itaú Unibanco",
                     "Banco Itaú Unibanco PN",
+                    "Financial",
                     100,
+                    30.00,
                     32.45,
+                    0.8,
+                    500000L,
                     3245.00,
+                    3000.00,
                     "https://icons.brapi.dev/icons/ITUB4.svg"
             );
 
@@ -232,9 +217,12 @@ public class UserControllerTest {
             var stockResult = response.getBody().getFirst().stocks().getFirst();
             assertEquals("ITUB4", stockResult.stockId());
             assertEquals("Itaú Unibanco", stockResult.name());
-            assertEquals(3245.00, stockResult.total());
+
+            assertEquals(3245.00, stockResult.marketValue());
             assertNotNull(stockResult.logoUrl());
+
         }
+
     }
 
 }

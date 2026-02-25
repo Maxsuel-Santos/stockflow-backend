@@ -81,7 +81,18 @@ public class AccountService {
 
     public List<AccountStockResponseDto> fallbackListStocks(String accountId, Throwable t) {
         return List.of(new AccountStockResponseDto(
-                "N/A", "Service unavailable", "Service unavailable", 0, 0.0, 0.0, ""
+                "N/A",
+                "Unavailable",
+                "Service Unavailable",
+                "N/A",
+                0,
+                0.0,
+                0.0,
+                0.0,
+                0L,
+                0.0,
+                0.0,
+                ""
         ));
     }
 

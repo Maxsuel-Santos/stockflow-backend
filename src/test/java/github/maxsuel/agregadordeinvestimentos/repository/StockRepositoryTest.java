@@ -32,14 +32,14 @@ public class StockRepositoryTest {
         @DisplayName("Should find stock by ID (Ticker) successfully.")
         public void findByIdSuccess() {
             // Arrange
-            Stock stock = createAndPersistStock("PETR4", "Petróleo Brasileiro S.A.");
+            Stock stock = createAndPersistStock("PETR4", "Petrobras");
 
             // Act
             Optional<Stock> result = stockRepository.findById("PETR4");
 
             // Assert
             assertThat(result).isPresent();
-            assertThat(result.get().getDescription()).isEqualTo("Petróleo Brasileiro S.A.");
+            assertThat(result.get().getName()).isEqualTo("Petrobras");
         }
 
         @Test
@@ -60,8 +60,7 @@ public class StockRepositoryTest {
         @Test
         @DisplayName("Should save stock with manual ID successfully.")
         public void saveStockSuccess() {
-            // Arrange
-            Stock stock = new Stock("VALE3", "Vale S.A.");
+            Stock stock = new Stock("VALE3", "Vale", "Vale S.A.", "Mining", "http://logo.com", "Description");
 
             // Act
             Stock savedStock = stockRepository.save(stock);
@@ -79,21 +78,20 @@ public class StockRepositoryTest {
             Stock stock = createAndPersistStock("ITUB4", "Itaú Unibanco");
 
             // Act
-            stock.setDescription("Itaú Unibanco Holding S.A.");
+            stock.setDescription("Nova Descrição");
             stockRepository.save(stock);
             entityManager.flush();
 
             // Assert
             Stock updated = entityManager.find(Stock.class, "ITUB4");
             assert updated != null;
-            assertThat(updated.getDescription()).isEqualTo("Itaú Unibanco Holding S.A.");
+            assertThat(updated.getDescription()).isEqualTo("Nova Descrição");
         }
     }
 
     // Helper method
-    private Stock createAndPersistStock(String stockId, String description) {
-        Stock stock = new Stock(stockId, description);
+    private Stock createAndPersistStock(String stockId, String name) {
+        Stock stock = new Stock(stockId, name, name + " S.A.", "General", "http://logo.url", "Description");
         return entityManager.persist(stock);
     }
-
 }

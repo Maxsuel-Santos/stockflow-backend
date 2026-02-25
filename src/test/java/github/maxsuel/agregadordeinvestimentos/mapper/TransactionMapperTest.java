@@ -28,7 +28,14 @@ public class TransactionMapperTest {
         @DisplayName("Should map Transactions entity to TransactionsResponseDto with calculated total value.")
         public void shouldMapToDtoSuccess() {
             // Arrange
-            var stock = new Stock("ITUB4", "Itaú Unibanco");
+            var stock = new Stock(
+                    "ITUB4",
+                    "Itau",
+                    "Itau Unibanco PN",
+                    "Financial",
+                    "http://logo.url",
+                    "Description"
+            );
             var price = new BigDecimal("30.00");
             var quantity = 10;
             var expectedTotal = new BigDecimal("300.00");

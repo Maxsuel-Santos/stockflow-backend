@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Tests for AccountStock Mapper.")
@@ -26,13 +28,23 @@ public class AccountStockMapperTest {
             // Arrange
             var accountStock = new AccountStock();
             accountStock.setQuantity(2);
-            accountStock.setStock(new Stock("PETR4", "Petrobras"));
+            accountStock.setAveragePrice(BigDecimal.valueOf(25.00));
+            accountStock.setStock(new Stock(
+                    "PETR4",
+                    "Petrobras",
+                    "Petroleo Brasileiro SA",
+                    "Energy",
+                    "https://logo.url",
+                    "Description"
+            ));
 
             var stockDto = new StockDto(
                     "PETR4",
                     "Petrobras PN",
                     "Petroleo Brasileiro SA",
                     30.00,
+                    0.5,
+                    1000L,
                     "BRL",
                     "https://logo.url"
             );
@@ -43,8 +55,11 @@ public class AccountStockMapperTest {
             // Assert
             assertThat(result).isNotNull();
             assertThat(result.stockId()).isEqualTo("PETR4");
-            assertThat(result.price()).isEqualTo(30.00);
-            assertThat(result.total()).isEqualTo(60.00);
+            assertThat(result.currentPrice()).isEqualTo(30.00);
+            assertThat(result.marketValue()).isEqualTo(60.00);
+            assertThat(result.total()).isEqualTo(50.00);
+            assertThat(result.sector()).isEqualTo("Energy");
+
         }
 
     }

@@ -9,6 +9,8 @@ import github.maxsuel.agregadordeinvestimentos.entity.enums.TradeType;
 import github.maxsuel.agregadordeinvestimentos.exceptions.InsufficientFundsException;
 import github.maxsuel.agregadordeinvestimentos.exceptions.InsufficientSharesException;
 import github.maxsuel.agregadordeinvestimentos.repository.*;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -77,6 +79,34 @@ public class TradeServiceTest {
         user.setCash(new BigDecimal("1000.00"));
     }
 
+    @NotNull
+    @Contract("_, _ -> new")
+    private StockDto createMockStockDto(String id, double price) {
+        return new StockDto(
+                id,
+                "Vale",
+                "Vale S.A.",
+                price,
+                0.5,
+                1000000L,
+                "BRL",
+                "https://logo.url"
+        );
+    }
+
+    @NotNull
+    @Contract("_ -> new")
+    private Stock createMockStockEntity(String id) {
+        return new Stock(
+                id,
+                "Vale",
+                "Vale S.A.",
+                "Mining",
+                "https://logo.url",
+                "Mining description"
+        );
+    }
+
     @Nested
     @DisplayName("Buy Operations.")
     public class BuyTests {
@@ -86,10 +116,10 @@ public class TradeServiceTest {
         public void executeBuy_Success() {
             // Arrange
             var dto = new TradeRequestDto(stockId, 10, accountId);
-            var brapiResponse = new BrapiResponseDto((List.of(new StockDto(stockId, "", "", 50.0, "BRL", ""))));
+            var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto(stockId, 50.0)));
 
             var account = new Account();
-            var stock = new Stock();
+            var stock = createMockStockEntity(stockId);
 
             var existingStock = new AccountStock(new AccountStockId(accountId, stockId), account, stock, 10, new BigDecimal("30.00"));
 
@@ -110,17 +140,16 @@ public class TradeServiceTest {
 
             assertEquals(20, savedStock.getQuantity());
             assertEquals(0, new BigDecimal("40.0000").compareTo(savedStock.getAveragePrice()));
-            assertEquals(0, new BigDecimal("500.00").compareTo(userArgumentCaptor.getValue().getCash())); // 1000 - 500
+            assertEquals(0, new BigDecimal("500.00").compareTo(userArgumentCaptor.getValue().getCash()));
             assertEquals(TradeType.BUY, transactionsArgumentCaptor.getValue().getType());
-
         }
 
         @Test
         @DisplayName("Should throw exception when user has no money.")
-        void executeBuy_InsufficientFunds() {
-            // Arrange & Act
+        public void executeBuy_InsufficientFunds() {
+            // Arrange
             var dto = new TradeRequestDto(stockId, 1000, accountId);
-            var brapiResponse = new BrapiResponseDto(List.of(new StockDto(stockId, "", "", 50.0, "BRL", "")));
+            var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto(stockId, 50.0)));
 
             when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
 
@@ -128,20 +157,21 @@ public class TradeServiceTest {
             assertThrows(InsufficientFundsException.class, () -> tradeService.executeBuy(user, dto));
             verify(userRepository, never()).save(any());
         }
-
     }
 
     @Nested
     @DisplayName("Sell Operations.")
-    class SellTests {
+    public class SellTests {
 
         @Test
         @DisplayName("Should execute sell and update user cash.")
-        void executeSell_Success() {
+        public void executeSell_Success() {
             // Arrange
             var dto = new TradeRequestDto(stockId, 5, accountId);
-            var brapiResponse = new BrapiResponseDto(List.of(new StockDto(stockId, "", "", 60.0, "BRL", "")));
-            var existingStock = new AccountStock(null, new Account(), new Stock(), 10, new BigDecimal("30.00"));
+            var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto(stockId, 60.0)));
+
+            var stock = createMockStockEntity(stockId);
+            var existingStock = new AccountStock(null, new Account(), stock, 10, new BigDecimal("30.00"));
 
             when(accountStockRepository.findById(any())).thenReturn(Optional.of(existingStock));
             when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
@@ -157,29 +187,38 @@ public class TradeServiceTest {
 
         @Test
         @DisplayName("Should delete stock record when quantity reaches zero.")
-        void executeSell_CompleteLiquidation() {
+        public void executeSell_CompleteLiquidation() {
+            // Arrange
             var dto = new TradeRequestDto(stockId, 10, accountId);
-            var brapiResponse = new BrapiResponseDto(List.of(new StockDto(stockId, "", "", 60.0, "BRL", "")));
-            var existingStock = new AccountStock(null, new Account(), new Stock(), 10, new BigDecimal("30.00"));
+            var brapiResponse = new BrapiResponseDto(List.of(createMockStockDto(stockId, 60.0)));
+
+            var stock = createMockStockEntity(stockId);
+            var existingStock = new AccountStock(null, new Account(), stock, 10, new BigDecimal("30.00"));
 
             when(accountStockRepository.findById(any())).thenReturn(Optional.of(existingStock));
             when(brapiClient.getQuote(anyString(), anyString())).thenReturn(brapiResponse);
 
+            // Act
             tradeService.executeSell(user, dto);
 
+            // Assert
             verify(accountStockRepository).delete(existingStock);
         }
 
         @Test
         @DisplayName("Should throw exception when selling more than owned.")
-        void executeSell_InsufficientShares() {
+        public void executeSell_InsufficientShares() {
+            // Arrange
             var dto = new TradeRequestDto(stockId, 50, accountId);
-            var existingStock = new AccountStock(null, new Account(), new Stock(), 10, new BigDecimal("30.00"));
+            var stock = createMockStockEntity(stockId);
+            var existingStock = new AccountStock(null, new Account(), stock, 10, new BigDecimal("30.00"));
 
             when(accountStockRepository.findById(any())).thenReturn(Optional.of(existingStock));
 
+            // Act & Assert
             assertThrows(InsufficientSharesException.class, () -> tradeService.executeSell(user, dto));
         }
+
     }
 
 }
