@@ -3,7 +3,6 @@ package github.maxsuel.agregadordeinvestimentos.controller;
 import java.util.List;
 import java.util.UUID;
 
-import github.maxsuel.agregadordeinvestimentos.exceptions.UserNotFoundException;
 import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
 import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
 import github.maxsuel.agregadordeinvestimentos.service.storage.StorageService;
@@ -39,8 +38,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
-    private final StorageService storageService;
 
     @Operation(
         summary = "Search user by ID",
@@ -216,19 +213,25 @@ public class UserController {
                                              )
                                              @RequestParam("file") MultipartFile file) {
 
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
+        userService.uploadAvatar(userId, file);
+        return ResponseEntity.noContent().build();
+    }
 
-        // Delete old photo
-        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
-            storageService.deleteFile(user.getAvatarUrl());
-        }
-
-        String newUrl = storageService.uploadFile(file);
-
-        user.setAvatarUrl(newUrl);
-        userRepository.save(user);
-
+    @Operation(
+        summary = "Remove user profile picture",
+        description = "Deletes the profile picture file from storage and clears the avatar URL in the database.",
+        operationId = "deleteUserAvatar"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Avatar removed successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @ApiResponse(responseCode = "500", description = "Error deleting file from storage",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @DeleteMapping("/{userId}/avatar")
+    public ResponseEntity<Void> deleteAvatar(@PathVariable UUID userId) {
+        userService.deleteAvatar(userId);
         return ResponseEntity.noContent().build();
     }
 

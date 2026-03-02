@@ -9,6 +9,7 @@ import github.maxsuel.agregadordeinvestimentos.dto.request.account.CreateAccount
 import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountStockResponseDto;
 import github.maxsuel.agregadordeinvestimentos.mapper.AccountMapper;
 import github.maxsuel.agregadordeinvestimentos.repository.AccountRepository;
+import github.maxsuel.agregadordeinvestimentos.service.storage.StorageService;
 import lombok.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class UserService {
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final AccountMapper accountMapper;
+    private final StorageService storageService;
 
     public Optional<User> getUserById(String userId) {
         return userRepository.findById(UUID.fromString(userId));
@@ -97,6 +100,38 @@ public class UserService {
                     return accountMapper.toDto(account, stocks);
                 })
                 .toList();
+    }
+
+    @Transactional
+    public void uploadAvatar(UUID userId, MultipartFile file) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found."));
+
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
+            storageService.deleteFile(user.getAvatarUrl());
+        }
+
+        String newUrl = storageService.uploadFile(file);
+
+        user.setAvatarUrl(newUrl);
+        userRepository.save(user);
+
+        log.info("Avatar updated for user: {}", userId);
+    }
+
+    @Transactional
+    public void deleteAvatar(UUID userId) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found."));
+
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
+            storageService.deleteFile(user.getAvatarUrl());
+
+            user.setAvatarUrl(null);
+            userRepository.save(user);
+            log.info("Avatar removed for user: {}", userId);
+        }
+
     }
 
 }

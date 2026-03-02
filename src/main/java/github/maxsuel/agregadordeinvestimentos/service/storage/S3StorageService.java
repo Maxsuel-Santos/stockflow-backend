@@ -27,9 +27,8 @@ public class S3StorageService implements StorageService {
     public String uploadFile(MultipartFile file) {
         if (!s3Client.doesBucketExistV2(bucketName)) {
             s3Client.createBucket(bucketName);
+            setBucketPublicPolicy(bucketName);
         }
-
-        setBucketPublicPolicy(bucketName);
 
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
@@ -40,18 +39,30 @@ public class S3StorageService implements StorageService {
 
             s3Client.putObject(bucketName, fileName, file.getInputStream(), metadata);
 
-            return s3Client.getUrl(bucketName, fileName).toString();
+            String rawUrl = s3Client.getUrl(bucketName, fileName).toString();
+
+            return rawUrl.replace("minio:9000", "localhost:9000");
+
         } catch (IOException e) {
+            log.error("Failed to read file input stream", e);
             throw new FileStorageException("Error uploading file.");
         } catch (com.amazonaws.AmazonServiceException e) {
+            log.error("AWS S3 communication error.", e);
             throw new FileStorageException("Communication error with the storage service.");
         }
     }
 
     @Override
     public void deleteFile(@NotNull String fileUrl) {
-        String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-        s3Client.deleteObject(bucketName, fileName);
+        if (fileUrl.isBlank()) return;
+
+        try {
+            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+            s3Client.deleteObject(bucketName, fileName);
+            log.info("File deleted from S3: {}", fileName);
+        } catch (Exception e) {
+            log.error("Failed to delete file from S3: {}", fileUrl, e);
+        }
     }
 
     private void setBucketPublicPolicy(String bucketName) {
@@ -71,9 +82,11 @@ public class S3StorageService implements StorageService {
 
         try {
             s3Client.setBucketPolicy(bucketName, policyJson);
+            log.info("Public policy set for bucket: {}", bucketName);
         } catch (Exception e) {
             log.error("Warning: Could not set public policy for bucket {}", bucketName);
         }
+
     }
 
 }
