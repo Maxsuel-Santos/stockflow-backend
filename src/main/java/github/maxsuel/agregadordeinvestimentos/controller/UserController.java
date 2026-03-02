@@ -1,17 +1,14 @@
 package github.maxsuel.agregadordeinvestimentos.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
+import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
+import github.maxsuel.agregadordeinvestimentos.service.storage.StorageService;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import github.maxsuel.agregadordeinvestimentos.dto.response.account.AccountResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.account.CreateAccountDto;
@@ -29,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/users")
@@ -189,4 +187,52 @@ public class UserController {
         var accounts = userService.listAllAccounts(userId);
         return ResponseEntity.ok(accounts);
     }
+
+    @Operation(
+        summary = "Upload user profile picture",
+        description = "Uploads a new profile picture for the specified user and saves the URL in the database. If a previous picture exists, it will be deleted from storage.",
+        operationId = "uploadUserAvatar"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Avatar uploaded successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid file or user ID",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @ApiResponse(responseCode = "404", description = "User not found",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error during file processing",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @PostMapping(
+        value = "/{userId}/avatar",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Void> uploadAvatar(@Parameter(description = "ID of the user to update") @PathVariable UUID userId,
+                                             @Parameter(
+                                                 description = "The image file to upload (JPEG, PNG, WEBP)",
+                                                 content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+                                             )
+                                             @RequestParam("file") MultipartFile file) {
+
+        userService.uploadAvatar(userId, file);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+        summary = "Remove user profile picture",
+        description = "Deletes the profile picture file from storage and clears the avatar URL in the database.",
+        operationId = "deleteUserAvatar"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Avatar removed successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @ApiResponse(responseCode = "500", description = "Error deleting file from storage",
+                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @DeleteMapping("/{userId}/avatar")
+    public ResponseEntity<Void> deleteAvatar(@PathVariable UUID userId) {
+        userService.deleteAvatar(userId);
+        return ResponseEntity.noContent().build();
+    }
+
 }
