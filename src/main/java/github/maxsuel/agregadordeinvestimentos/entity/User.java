@@ -43,6 +43,9 @@ public class User {
     @Column(precision = 19, scale = 2)
     private BigDecimal cash = new BigDecimal("1000.00");
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @CreationTimestamp
     private Instant creationTimestamp;
 
