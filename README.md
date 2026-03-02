@@ -69,6 +69,8 @@ A documentação completa e interativa (Swagger UI) pode ser acessada em: `http:
 | `GET` | `/users/{userId}` | Detalhes de um perfil específico. |
 | `PUT` | `/users/{userId}` | Atualiza dados (nome, e-mail). |
 | `DELETE` | `/users/{userId}` | Remove permanentemente o usuário. |
+| `POST` | `/users/{userId}/avatar` | **Upload da foto de perfil (Multipart - Max 5MB).** |
+| `DELETE` | `/users/{userId}/avatar` | **Remove a foto de perfil do storage.** |
 
 ### 📈 Mercado & Ativos (Catálogo)
 | Método | Endpoint | Descrição |
