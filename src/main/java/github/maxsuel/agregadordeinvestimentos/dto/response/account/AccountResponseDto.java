@@ -1,10 +1,10 @@
 package github.maxsuel.agregadordeinvestimentos.dto.response.account;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.List;
 
 @Schema(description = "Response with user account details.")
 public record AccountResponseDto(
@@ -23,6 +23,7 @@ public record AccountResponseDto(
     )
     String description,
 
+    @NotNull
     @ArraySchema(
         schema = @Schema(
             implementation = AccountStockResponseDto.class,

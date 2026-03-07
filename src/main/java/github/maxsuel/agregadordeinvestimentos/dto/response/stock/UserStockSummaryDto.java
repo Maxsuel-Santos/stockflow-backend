@@ -6,15 +6,18 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Summary of a stock owned by the user.")
 public record UserStockSummaryDto(
 
-    @Schema(example = "ITUB4")
     @NotNull
+    @Schema(
+        description = "Ticker symbol of the stock.",
+        example = "ITUB4"
+    )
     String stockId,
 
+    @NotNull
     @Schema(
         description = "Total quantity owned across all accounts.",
         example = "150"
     )
-    @NotNull
     Integer totalQuantity
 
 ) {
