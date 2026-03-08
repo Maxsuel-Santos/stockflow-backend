@@ -1,5 +1,18 @@
 package github.maxsuel.agregadordeinvestimentos.controller;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import github.maxsuel.agregadordeinvestimentos.dto.request.stock.TradeRequestDto;
 import github.maxsuel.agregadordeinvestimentos.dto.response.stock.PortfolioResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.response.stock.TransactionsResponseDto;
@@ -20,13 +33,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.MediaType;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/trades")
@@ -79,8 +85,10 @@ public class TradeController {
         )
     })
     @PostMapping("/buy")
-    public ResponseEntity<Void> buy(@RequestBody @Valid TradeRequestDto dto,
-                                    @Parameter(hidden = true) @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> buy(
+        @RequestBody @Valid TradeRequestDto dto,
+        @Parameter(hidden = true) @AuthenticationPrincipal User user
+    ) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -97,17 +105,31 @@ public class TradeController {
         security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sale successful"),
-            @ApiResponse(responseCode = "400", description = "Insufficient shares for the requested operation",
-                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized",
-                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-            @ApiResponse(responseCode = "404", description = "Account or Asset not found",
-                         content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Sale successful"
+        ),
+        @ApiResponse(
+            responseCode = "400", 
+            description = "Insufficient shares for the requested operation",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "401", 
+            description = "Unauthorized",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Account or Asset not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        )
     })
     @PostMapping("/sell")
-    public ResponseEntity<Void> sell(@RequestBody @Valid TradeRequestDto dto,
-                                     @Parameter(hidden = true) @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> sell(
+        @RequestBody @Valid TradeRequestDto dto,
+        @Parameter(hidden = true) @AuthenticationPrincipal User user
+    ) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -124,22 +146,36 @@ public class TradeController {
         security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully",
-                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionsResponseDto.class)))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access",
-                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+        @ApiResponse(
+            responseCode = "200", 
+            description = "List of transactions retrieved successfully",
+            content = @Content(
+                array = @ArraySchema(schema = @Schema(implementation = TransactionsResponseDto.class)),
+                mediaType = MediaType.APPLICATION_JSON_VALUE
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401", 
+            description = "Unauthorized access",
+            content = @Content(
+                schema = @Schema(implementation = ErrorResponseDto.class),
+                mediaType = MediaType.APPLICATION_JSON_VALUE
+            )
+        )
     })
     @GetMapping("/history")
-    public ResponseEntity<List<TransactionsResponseDto>> getHistory(@Parameter(hidden = true) @AuthenticationPrincipal User user) {
+    public ResponseEntity<List<TransactionsResponseDto>> getHistory(
+        @Parameter(hidden = true) @AuthenticationPrincipal User user
+    ) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         return ResponseEntity.ok(
-                transactionsRepository.findAllByUser_UserId(user.getUserId())
-                        .stream()
-                        .map(transactionMapper::toDto)
-                        .toList()
+            transactionsRepository.findAllByUser_UserId(user.getUserId())
+                .stream()
+                .map(transactionMapper::toDto)
+                .toList()
         );
     }
 
@@ -153,27 +189,37 @@ public class TradeController {
         @ApiResponse(
             responseCode = "200",
             description = "Portfolio calculated successfully",
-            content = @Content(schema = @Schema(implementation = PortfolioResponseDto.class))
+            content = @Content(
+                schema = @Schema(implementation = PortfolioResponseDto.class),
+                mediaType = MediaType.APPLICATION_JSON_VALUE
+            )
         ),
         @ApiResponse(
             responseCode = "401",
             description = "Unauthorized",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                schema = @Schema(implementation = ErrorResponseDto.class),
+                mediaType = MediaType.APPLICATION_JSON_VALUE
+            )
         ),
         @ApiResponse(
             responseCode = "404",
             description = "Account not found or access denied for this user",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+            content = @Content(
+                schema = @Schema(implementation = ErrorResponseDto.class),
+                mediaType = MediaType.APPLICATION_JSON_VALUE
+            )
         )
     })
     @GetMapping("/portfolio/{accountId}")
-    public ResponseEntity<PortfolioResponseDto> getPortfolio(@PathVariable String accountId,
-                                                             @Parameter(hidden = true) @AuthenticationPrincipal User user) {
+    public ResponseEntity<PortfolioResponseDto> getPortfolio(
+        @PathVariable String accountId,
+        @Parameter(hidden = true) @AuthenticationPrincipal User user
+    ) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         return ResponseEntity.ok(accountService.getCompletePortfolio(user, accountId));
     }
-
 }
