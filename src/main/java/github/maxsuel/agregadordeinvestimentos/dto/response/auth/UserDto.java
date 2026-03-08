@@ -33,7 +33,12 @@ public record UserDto(
         description = "Role or profile assigned to the user.",
         example = "ADMIN"
     )
-    Role role
+    Role role,
 
+    @Schema(
+        description = "URL of the user's avatar image.",
+        example = "http://example.com/avatars/johndoe.jpg"
+    )
+    String avatarUrl
 ) {
 }

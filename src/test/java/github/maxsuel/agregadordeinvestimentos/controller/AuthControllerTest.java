@@ -6,11 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import github.maxsuel.agregadordeinvestimentos.dto.response.auth.UserDto;
-import github.maxsuel.agregadordeinvestimentos.entity.User;
-import github.maxsuel.agregadordeinvestimentos.entity.enums.Role;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,10 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 
-import github.maxsuel.agregadordeinvestimentos.dto.response.auth.AuthResponseDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.auth.CreateUserDto;
 import github.maxsuel.agregadordeinvestimentos.dto.request.auth.LoginDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.auth.AuthResponseDto;
+import github.maxsuel.agregadordeinvestimentos.dto.response.auth.UserDto;
+import github.maxsuel.agregadordeinvestimentos.entity.User;
+import github.maxsuel.agregadordeinvestimentos.entity.enums.Role;
 import github.maxsuel.agregadordeinvestimentos.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthControllerTest {
@@ -51,7 +50,13 @@ public class AuthControllerTest {
             // Arrange
             var dto = new CreateUserDto("username", "username@email.com", "123");
             var userId = UUID.randomUUID().toString();
-            var userDto = new UserDto(userId, "username", "username@email.com", Role.ADMIN);
+            var userDto = new UserDto(
+                userId, 
+                "username", 
+                "username@email.com", 
+                Role.ADMIN, 
+                "http://example.com/avatar.jpg"
+            );
             var userResponse = new AuthResponseDto("fake-jwt-token", userDto);
 
             when(authService.register(dto)).thenReturn(userResponse);
@@ -112,7 +117,13 @@ public class AuthControllerTest {
             public void shouldReturnUserWhenAuthenticated() {
                 // Arrange
                 User mockUser = new User();
-                UserDto mockDto = new UserDto("1", "User", "user@email.com", Role.ADMIN);
+                UserDto mockDto = new UserDto(
+                    "1", 
+                    "User", 
+                    "user@email.com", 
+                    Role.ADMIN, 
+                    "http://example.com/avatar.jpg"
+                );
 
                 when(authService.getAuthenticatedUserDto(mockUser)).thenReturn(mockDto);
 
