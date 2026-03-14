@@ -50,32 +50,48 @@ public class UserService {
         var userUuid = UUID.fromString(userId);
 
         var user = userRepository.findById(userUuid)
-            .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        if (updateUserDto.username() != null) {
+        boolean credentialsChanged = false;
+
+        if (updateUserDto.username() != null && !updateUserDto.username().equals(user.getUsername())) {
             user.setUsername(updateUserDto.username());
+            credentialsChanged = true;
         }
 
         if (updateUserDto.password() != null) {
             user.setPassword(passwordEncoder.encode(updateUserDto.password()));
+            credentialsChanged = true;
         }
 
         userRepository.save(user);
-        log.info("User updated with ID: {}. Password re-hashed.", userId);
+
+        if (credentialsChanged) {
+            log.info("Credentials updated for user ID: {}. Existing JWT sessions will become invalid on next request.", userId);
+        } else {
+            log.info("User updated with ID: {}. No sensitive credentials were changed.", userId);
+        }
     }
 
     @Transactional
     public void deleteUser(String userId) {
         var userUuid = UUID.fromString(userId);
 
-        var userExists = userRepository.existsById(userUuid);
+        var user = userRepository.findById(userUuid)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        if (userExists) {
-            userRepository.deleteById(userUuid);
-            log.info("User deleted with ID: {}", userId);
-        } else {
-            log.warn("Attempted to delete non-existing user with ID: {}", userId);
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
+            try {
+                storageService.deleteFile(user.getAvatarUrl());
+                log.info("Avatar file deleted for user ID: {}", userId);
+            } catch (Exception e) {
+                log.error("Failed to delete avatar file during user deletion for ID: {}", userId, e);
+            }
         }
+
+        userRepository.delete(user);
+
+        log.info("User and all associated financial data successfully deleted with ID: {}", userId);
     }
 
     @Transactional

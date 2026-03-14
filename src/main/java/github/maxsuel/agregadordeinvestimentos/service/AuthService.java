@@ -74,6 +74,7 @@ public class AuthService {
         return userMapper.toDto(user);
     }
 
+    @Transactional
     public void logout(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.replace("Bearer ", "");
