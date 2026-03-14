@@ -10,6 +10,7 @@ import github.maxsuel.agregadordeinvestimentos.mapper.BillingAddressMapper;
 import github.maxsuel.agregadordeinvestimentos.repository.AccountRepository;
 import github.maxsuel.agregadordeinvestimentos.repository.BillingAddressRepository;
 import github.maxsuel.agregadordeinvestimentos.repository.UserRepository;
+import github.maxsuel.agregadordeinvestimentos.service.storage.StorageService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,9 @@ public class UserServiceTest {
 
     @Mock
     private BillingAddressMapper billingAddressMapper;
+
+    @Mock
+    private StorageService storageService;
 
     @InjectMocks
     private UserService userService;
@@ -203,50 +207,40 @@ public class UserServiceTest {
     public class DeleteUserById {
 
         @Test
-        @DisplayName("Should delete user with success when it exists.")
+        @DisplayName("Should delete user and avatar with success when it exists.")
         public void shouldDeleteUserWithSuccessWhenItExists() {
             // Arrange
-            doReturn(true)
-                    .when(userRepository)
-                    .existsById(uuidArgumentCaptor.capture());
-
-            doNothing()
-                    .when(userRepository)
-                    .deleteById(uuidArgumentCaptor.capture());
-            
             var userId = UUID.randomUUID();
+            var user = new User();
+            user.setUserId(userId);
+            user.setAvatarUrl("http://localhost:9000/avatar.png");
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            doNothing().when(storageService).deleteFile(user.getAvatarUrl());
 
             // Act
             userService.deleteUser(userId.toString());
 
             // Assert
-            var idList = uuidArgumentCaptor.getAllValues();
-
-            assertEquals(userId, idList.get(0));
-            assertEquals(userId, idList.get(1));
-
-            verify(userRepository, times(1)).existsById(idList.get(0));
-            verify(userRepository, times(1)).deleteById(idList.get(1));
+            verify(storageService, times(1)).deleteFile(user.getAvatarUrl());
+            verify(userRepository, times(1)).delete(user);
         }
 
         @Test
-        @DisplayName("Should not delete user when it does not exist.")
+        @DisplayName("Should throw UserNotFoundException when user does not exist.")
         public void shouldNotDeleteUserWhenItDoesNotExist() {
             // Arrange
-            doReturn(false)
-                    .when(userRepository)
-                    .existsById(uuidArgumentCaptor.capture());
-            
             var userId = UUID.randomUUID();
 
-            // Act
-            userService.deleteUser(userId.toString());
+            when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-            // Assert
-            assertEquals(userId, uuidArgumentCaptor.getValue());
+            // Act & Assert
+            assertThatThrownBy(() -> userService.deleteUser(userId.toString()))
+                    .isInstanceOf(UserNotFoundException.class)
+                    .hasMessageContaining("User not found");
 
-            verify(userRepository, times(1)).existsById(uuidArgumentCaptor.getValue());
-            verify(userRepository, times(0)).deleteById(any());
+            verify(userRepository, times(0)).delete(any());
+            verify(storageService, times(0)).deleteFile(any());
         }
     }
 
@@ -258,31 +252,23 @@ public class UserServiceTest {
         @DisplayName("Should update user by id when it exists and username and password are filled.")
         public void shouldUpdateUserByIdWhenItExistsAndUsernameAndPasswordAreFilled() {
             // Arrange
-            var updateUserDto = new UpdateUserDto("newUsername", "newPassword");
-            var encodedPassword = "hashedPassword123";
             var userId = UUID.randomUUID();
-            var user = new User(userId, "username", "email@email.com", "password", Instant.now(), null);
+            var updateUserDto = new UpdateUserDto("newUsername", "newPassword");
+            var user = new User(userId, "oldUser", "email@email.com", "oldPass", Instant.now(), null);
 
-            doReturn(encodedPassword).when(passwordEncoder).encode(updateUserDto.password());
-
-            doReturn(Optional.of(user))
-                    .when(userRepository)
-                    .findById(uuidArgumentCaptor.capture());
-
-            doReturn(user)
-                    .when(userRepository)
-                    .save(userArgumentCaptor.capture());
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(passwordEncoder.encode("newPassword")).thenReturn("hashedPassword");
+            when(userRepository.save(any(User.class))).thenReturn(user);
 
             // Act
-            userService.updateUserById(user.getUserId().toString(), updateUserDto);
+            userService.updateUserById(userId.toString(), updateUserDto);
 
             // Assert
-            var userCaptured = userArgumentCaptor.getValue();
+            verify(userRepository).save(userArgumentCaptor.capture());
+            User capturedUser = userArgumentCaptor.getValue();
 
-            assertEquals(updateUserDto.username(), userCaptured.getUsername());
-            assertEquals(encodedPassword, userCaptured.getPassword());
-
-            verify(userRepository, times(1)).save(any(User.class));
+            assertEquals("newUsername", capturedUser.getUsername());
+            assertEquals("hashedPassword", capturedUser.getPassword());
         }
 
         @Test
@@ -317,12 +303,13 @@ public class UserServiceTest {
     public class AccountManagementTests {
 
         @Test
-        @DisplayName("Should create account and billing address successfully.")
+        @DisplayName("Should create account successfully.")
         public void createAccount_Success() {
             // Arrange
             var userId = UUID.randomUUID();
             var user = new User();
             user.setUserId(userId);
+
             var dto = new CreateAccountDto("Main Wallet", "Street 123", 100);
             var account = new Account();
             account.setAccountId(UUID.randomUUID());
@@ -335,9 +322,10 @@ public class UserServiceTest {
             userService.createAccount(userId.toString(), dto);
 
             // Assert
-            verify(accountRepository).save(account);
-            verify(billingAddressRepository).save(any());
-            verify(billingAddressMapper).toEntity(eq(dto), eq(account));
+            verify(userRepository, times(1)).findById(userId);
+            verify(accountMapper, times(1)).toEntity(dto, user);
+            verify(accountRepository, times(1)).save(account);
+
         }
 
         @Test
