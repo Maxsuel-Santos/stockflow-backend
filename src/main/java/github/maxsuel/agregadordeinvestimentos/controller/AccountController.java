@@ -6,12 +6,7 @@ import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
 
 import github.maxsuel.agregadordeinvestimentos.dto.request.account.AssociateAccountStockDto;
@@ -104,6 +99,28 @@ public class AccountController {
     @GetMapping("/{accountId}/balance")
     public ResponseEntity<AccountBalanceDto> getBalance(@PathVariable String accountId) {
         return ResponseEntity.ok(accountService.getAccountBalance(accountId));
+    }
+
+    @Operation(
+        summary = "Delete an account",
+        description = "Permanently removes a specific investment account and all its stock associations.",
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "204",
+            description = "Account deleted successfully."
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found.",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
+        )
+    })
+    @DeleteMapping("/{accountId}")
+    public ResponseEntity<Void> deleteAccount(@PathVariable String accountId) {
+        accountService.deleteAccount(accountId);
+        return ResponseEntity.ok().build();
     }
 
 }

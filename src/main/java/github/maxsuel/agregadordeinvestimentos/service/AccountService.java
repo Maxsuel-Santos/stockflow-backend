@@ -164,4 +164,12 @@ public class AccountService {
         );
     }
 
+    @Transactional
+    public void deleteAccount(String accountId) {
+        var account = accountRepository.findById(UUID.fromString(accountId))
+                .orElseThrow(() -> new AccountNotFoundException("Account not found."));
+
+        accountRepository.delete(account);
+    }
+
 }
