@@ -164,4 +164,19 @@ public class AccountService {
         );
     }
 
+    @Transactional
+    public void deleteAccount(String accountId) {
+        var account = accountRepository.findById(UUID.fromString(accountId))
+                .orElseThrow(() -> new AccountNotFoundException("Account not found."));
+
+        if (!account.getAccountStocks().isEmpty()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Cannot delete account with linked stocks. Please, remove all stocks before deleting the account."
+            );
+        }
+
+        accountRepository.delete(account);
+    }
+
 }
