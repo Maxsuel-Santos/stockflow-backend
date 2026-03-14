@@ -115,12 +115,16 @@ public class AccountController {
             responseCode = "404",
             description = "Account not found.",
             content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
-        )
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Conflict - Account has active stocks."
+        ),
     })
     @DeleteMapping("/{accountId}")
     public ResponseEntity<Void> deleteAccount(@PathVariable String accountId) {
         accountService.deleteAccount(accountId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 }
