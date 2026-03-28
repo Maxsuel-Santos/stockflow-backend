@@ -92,7 +92,7 @@ A documentação completa e interativa (Swagger UI) pode ser acessada em: `http:
 | `POST`   | `/users/{userId}/accounts`      | Cria uma nova carteira para o usuário.             |
 | `GET`    | `/users/{userId}/accounts`      | Lista carteiras e saldos consolidados.             |
 | `GET`    | `/accounts/{accountId}/balance` | Cálculo de patrimônio simplificado (Total Equity). |
-| `DELETE` | `/accounts/{accountId}`         | Deleta uma conta caso não hava ações vinculadas.   |
+| `DELETE` | `/accounts/{accountId}`         | Deleta uma conta caso não haja ações vinculadas.   |
 ---
 
 ## ⚙️ Configuração e Execução
