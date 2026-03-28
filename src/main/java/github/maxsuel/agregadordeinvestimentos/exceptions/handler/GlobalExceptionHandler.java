@@ -3,13 +3,16 @@ package github.maxsuel.agregadordeinvestimentos.exceptions.handler;
 import github.maxsuel.agregadordeinvestimentos.exceptions.*;
 import github.maxsuel.agregadordeinvestimentos.exceptions.dto.ErrorResponseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.Instant;
@@ -137,6 +140,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 null
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponseDto> handleForeignViolation(@NonNull DataIntegrityViolationException ex) {
+        var message = "Integrity violation: This record has active dependencies and cannot be removed.";
+
+        var errorResponse = new ErrorResponseDto(
+                HttpStatus.CONFLICT.value(),
+                message,
+                Instant.now(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponseDto> handleResponseStatus(@NotNull ResponseStatusException ex) {
+        var errorResponse = new ErrorResponseDto(
+                ex.getStatusCode().value(),
+                ex.getMessage(),
+                Instant.now(),
+                null
+        );
+
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
 
 }
