@@ -1,4 +1,4 @@
-# 📈 Agregador de Investimentos API - Backend
+# 📈 StockFlow API - Backend
 
 ![Status do Projeto](https://img.shields.io/badge/status-active-brightgreen)
 ![Java Version](https://img.shields.io/badge/java-21-orange)
